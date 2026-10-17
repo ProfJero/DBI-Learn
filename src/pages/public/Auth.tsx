@@ -135,19 +135,14 @@ export function Login() {
         <Field label="Email or username" htmlFor="identifier">
           <Input id="identifier" autoComplete="username" required value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoFocus />
         </Field>
-        <Field
-          label={
-            <span className="flex justify-between">
-              Password
-              <Link to="/forgot-password" className="font-medium text-brand-600 hover:underline">
-                Forgot password?
-              </Link>
-            </span>
-          }
-          htmlFor="password"
-        >
-          <PasswordInput id="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-        </Field>
+        <div className="relative">
+          <Link to="/forgot-password" className="absolute right-0 top-0 text-sm font-medium text-brand-600 hover:underline">
+            Forgot password?
+          </Link>
+          <Field label="Password" htmlFor="password">
+            <PasswordInput id="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          </Field>
+        </div>
         <Button type="submit" size="lg" className="w-full" loading={busy}>
           Log in
         </Button>

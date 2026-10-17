@@ -269,6 +269,7 @@ export function Modal({
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
@@ -279,6 +280,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
+      aria-labelledby={titleId}
       onClose={onClose}
       onClick={(e) => e.target === ref.current && onClose()}
       className={cn('w-[calc(100%-2rem)] rounded-2xl bg-white p-0 text-ink-900 shadow-2xl backdrop:bg-ink-950/50 backdrop:backdrop-blur-sm dark:bg-ink-900 dark:text-ink-100', width)}
@@ -286,7 +288,9 @@ export function Modal({
       {open && (
         <div className="flex max-h-[85vh] flex-col">
           <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4 dark:border-ink-800">
-            <h2 className="text-lg font-bold">{title}</h2>
+            <h2 id={titleId} className="text-lg font-bold">
+              {title}
+            </h2>
             <button onClick={onClose} className="rounded-lg p-1.5 text-ink-500 hover:bg-ink-100 dark:hover:bg-ink-800" aria-label="Close">
               <X className="h-5 w-5" />
             </button>

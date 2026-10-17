@@ -246,7 +246,7 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
       </div>
 
       {/* Footer: signatures · seal · verification */}
-      <div className="absolute inset-x-[90px] bottom-[64px] z-10 grid grid-cols-[1fr_auto_1fr] items-end gap-6">
+      <div className="absolute inset-x-[90px] bottom-[84px] z-10 grid grid-cols-[1fr_auto_1fr] items-end gap-6">
         <div className="flex items-end justify-start gap-8">
           {sigs.map((s) => (
             <div key={s.name} className="w-[200px] text-center">
@@ -265,7 +265,7 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
             </div>
           ))}
         </div>
-        <div className="-mb-3">
+        <div className="-mb-2">
           <Seal theme={theme} year={year} />
         </div>
         <div className="flex items-end justify-end gap-3 text-right">
@@ -284,7 +284,7 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
         </div>
       </div>
 
-      <div className="absolute inset-x-0 bottom-[46px] z-10 text-center text-[8.5px] font-medium tracking-[0.18em] text-[#8a8370]">
+      <div className="absolute inset-x-0 bottom-[50px] z-10 text-center text-[8.5px] font-medium tracking-[0.18em] text-[#8a8370]">
         BUILT BY {BRAND.builtBy.toUpperCase()} · POWERED BY {BRAND.org.toUpperCase()}
       </div>
     </div>

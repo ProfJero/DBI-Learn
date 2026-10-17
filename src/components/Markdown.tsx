@@ -19,6 +19,11 @@ function textOf(node: ReactNode): string {
   return '';
 }
 
+/** Puts each `> [!TIP]` marker in its own paragraph so the callout body isn't hidden with it. */
+export function splitCalloutMarkers(md: string) {
+  return md.replace(/^(>[ \t]?\[!(?:TIP|NOTE|WARNING|TRY)\])[ \t]*\n(?=>[ \t]*\S)/gm, '$1\n>\n');
+}
+
 /** Renders lesson markdown with GFM tables, syntax highlighting and `> [!TIP]` style callouts. */
 export function Markdown({ children, className }: { children: string; className?: string }) {
   return (
@@ -55,7 +60,7 @@ export function Markdown({ children, className }: { children: string; className?
           ),
         }}
       >
-        {children}
+        {splitCalloutMarkers(children)}
       </ReactMarkdown>
     </div>
   );

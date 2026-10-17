@@ -182,8 +182,10 @@ function courseSql({ meta, modules, finals }, categories) {
 values (${q(cid)}, ${q(meta.slug)}, ${q(meta.title)}, ${q(meta.subtitle)}, ${q(meta.description?.trim())}, (select id from public.categories where slug = ${q(meta.category)}), ${q(meta.level ?? 'beginner')}, 'English', ${q(meta.accent ?? null)}, 'published', ${arr(meta.outcomes)}, ${arr(meta.requirements)}, ${arr(meta.tags)}, ${pass}, ${meta.hours ?? 'null'}, ${!!meta.featured}, true, ${!!meta.sequential}, now())
 on conflict (id) do update set slug = excluded.slug, title = excluded.title, subtitle = excluded.subtitle, description = excluded.description, category_id = excluded.category_id, level = excluded.level, accent = excluded.accent, outcomes = excluded.outcomes, requirements = excluded.requirements, tags = excluded.tags, pass_mark = excluded.pass_mark, estimated_hours = excluded.estimated_hours, featured = excluded.featured, sequential = excluded.sequential;`,
   );
+  const fx = { course: { id: cid, slug: meta.slug, title: meta.title, subtitle: meta.subtitle ?? null, description: meta.description?.trim() ?? null, category_slug: meta.category, level: meta.level ?? 'beginner', language: 'English', cover_url: null, accent: meta.accent ?? null, instructor_id: null, status: 'published', outcomes: meta.outcomes ?? [], requirements: meta.requirements ?? [], tags: meta.tags ?? [], pass_mark: pass, certificate_enabled: true, sequential: !!meta.sequential, featured: !!meta.featured, estimated_hours: meta.hours ?? null, enrollment_count: 0, rating_avg: 0, rating_count: 0, created_at: '2026-10-17T00:00:00Z', updated_at: '2026-10-17T00:00:00Z', published_at: '2026-10-17T00:00:00Z' }, modules: [], lessons: [], quizzes: [], questions: [], keys: [] };
   const quizSql = (quiz, moduleId, position) => {
     const qid = uid('quiz', meta.slug, quiz.kind, quiz.title);
+    fx.quizzes.push({ id: qid, course_id: cid, module_id: moduleId, title: quiz.title, description: null, kind: quiz.kind, time_limit_minutes: quiz.attrs.time ? Number(quiz.attrs.time) : null, pass_mark: Number(quiz.attrs.pass ?? pass), max_attempts: quiz.attrs.attempts ? Number(quiz.attrs.attempts) : null, shuffle_questions: true, show_answers: true, position, status: 'published' });
     keep.quizzes.push(qid);
     const a = quiz.attrs;
     sql.push(
@@ -194,6 +196,8 @@ on conflict (id) do update set module_id = excluded.module_id, title = excluded.
     quiz.questions.forEach((qq, i) => {
       const id = uid('question', qid, qq.prompt);
       keep.questions.push(id);
+      fx.questions.push({ id, quiz_id: qid, kind: qq.kind, prompt: qq.prompt, options: qq.kind === 'short' ? [] : qq.options, points: qq.points, position: i + 1 });
+      fx.keys.push({ question_id: id, answer: qq.answer, explanation: qq.explanation });
       sql.push(
         `insert into public.questions (id, quiz_id, kind, prompt, options, points, position) values (${q(id)}, ${q(qid)}, ${q(qq.kind)}, ${q(qq.prompt)}, ${json(qq.kind === 'short' ? [] : qq.options)}, ${qq.points}, ${i + 1})
 on conflict (id) do update set kind = excluded.kind, prompt = excluded.prompt, options = excluded.options, points = excluded.points, position = excluded.position;
@@ -205,6 +209,7 @@ on conflict (question_id) do update set answer = excluded.answer, explanation = 
   modules.forEach((m, mi) => {
     const mid = uid('module', meta.slug, mi, m.title);
     keep.modules.push(mid);
+    fx.modules.push({ id: mid, course_id: cid, title: m.title, summary: m.summary.join('\n').trim() || null, position: mi + 1 });
     sql.push(
       `insert into public.modules (id, course_id, title, summary, position) values (${q(mid)}, ${q(cid)}, ${q(m.title)}, ${q(m.summary.join('\n').trim() || null)}, ${mi + 1})
 on conflict (id) do update set title = excluded.title, summary = excluded.summary, position = excluded.position;`,
@@ -212,6 +217,7 @@ on conflict (id) do update set title = excluded.title, summary = excluded.summar
     m.lessons.forEach((l, li) => {
       const lid = uid('lesson', meta.slug, mi, l.title);
       keep.lessons.push(lid);
+      fx.lessons.push({ id: lid, course_id: cid, module_id: mid, title: l.title, kind: l.video ? 'video' : 'article', content: l.content, video_url: l.video ?? null, duration_minutes: l.minutes, position: li + 1, is_preview: l.preview || (mi === 0 && li === 0), attachments: [] });
       sql.push(
         `insert into public.lessons (id, course_id, module_id, title, kind, content, video_url, duration_minutes, position, is_preview)
 values (${q(lid)}, ${q(cid)}, ${q(mid)}, ${q(l.title)}, ${q(l.video ? 'video' : 'article')}, ${q(l.content)}, ${q(l.video ?? null)}, ${l.minutes}, ${li + 1}, ${l.preview || (mi === 0 && li === 0)})
@@ -232,7 +238,7 @@ on conflict (id) do update set module_id = excluded.module_id, title = excluded.
     questions: keep.questions.length,
     words: modules.flatMap((m) => m.lessons).reduce((s, l) => s + l.content.split(/\s+/).length, 0),
   };
-  return { sql: sql.join('\n'), stats };
+  return { sql: sql.join('\n'), stats, fx };
 }
 
 const categories = YAML.parse(readFileSync(join(root, 'content/categories.yml'), 'utf8'));
@@ -246,12 +252,14 @@ on conflict (slug) do update set name = excluded.name, description = excluded.de
   );
 });
 
+const fixtures = { categories: categories.map((c, i) => ({ id: uid('category', c.slug), slug: c.slug, name: c.name, description: c.description, color: c.color, icon: c.icon ?? null, signatory: c.signatory ?? null, position: i + 1 })), courses: [] };
 const files = readdirSync(join(root, 'content/courses')).filter((f) => f.endsWith('.md')).sort();
 let totals = { lessons: 0, quizzes: 0, questions: 0, words: 0 };
 for (const f of files) {
   const parsed = parseCourse(join(root, 'content/courses', f));
-  const { sql, stats } = courseSql(parsed, categories);
+  const { sql, stats, fx } = courseSql(parsed, categories);
   out.push(sql);
+  fixtures.courses.push(fx);
   totals = Object.fromEntries(Object.entries(totals).map(([k, v]) => [k, v + stats[k]]));
   console.log(`✓ ${parsed.meta.title}: ${stats.lessons} lessons, ${stats.quizzes} quizzes, ${stats.questions} questions, ${stats.words} words`);
 }
@@ -264,4 +272,8 @@ on conflict (id) do update set title = excluded.title, description = excluded.de
 });
 
 writeFileSync(join(root, 'supabase/seed/content.sql'), out.join('\n\n') + '\n');
+if (process.argv.includes('--fixtures')) {
+  writeFileSync(join(root, 'tests/fixtures/content.json'), JSON.stringify(fixtures));
+  console.log('Wrote tests/fixtures/content.json');
+}
 console.log(`\nTotal: ${files.length} courses, ${totals.lessons} lessons, ${totals.quizzes} quizzes, ${totals.questions} questions, ${totals.words.toLocaleString()} words`);

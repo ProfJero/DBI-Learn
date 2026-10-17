@@ -1,0 +1,362 @@
+/* Custom styles beyond Tailwind */
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Form input focus styles */
+input:focus, select:focus, textarea:focus {
+    outline: none;
+}
+
+/* Animation for alerts */
+@keyframes slideIn {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+#signupError, #signupSuccess, #loginError, #loginSuccess {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Custom checkbox and radio styling */
+input[type="checkbox"], input[type="radio"] {
+    cursor: pointer;
+}
+
+/* Step transition */
+.step {
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 0.3s ease-in-out;
+}
+
+/* Username suggestion buttons */
+#suggestionsList button {
+    transition: all 0.2s ease;
+}
+
+/* Interest checkboxes hover effect */
+.grid-cols-2 label:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Password toggle button */
+.absolute.right-3.top-3 {
+    transition: color 0.2s ease;
+}
+
+.absolute.right-3.top-3:hover {
+    transform: scale(1.1);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Button loading state */
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+button:disabled svg {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .max-w-2xl {
+        margin: 1rem;
+    }
+    
+    .grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Organization colors */
+.text-rth-green {
+    color: #16a34a;
+}
+
+.bg-rth-green {
+    background-color: #16a34a;
+}
+
+.text-rth-orange {
+    color: #ea580c;
+}
+
+.bg-rth-orange {
+    background-color: #ea580c;
+}
+
+.hover\:bg-rth-green-dark:hover {
+    background-color: #15803d;
+}
+
+.hover\:bg-rth-orange-dark:hover {
+    background-color: #c2410c;
+}
+
+/* Gradient backgrounds */
+.bg-rth-gradient {
+    background: linear-gradient(to right, #16a34a, #ea580c);
+}
+
+/* Datalist styling (limited support) */
+datalist {
+    display: none;
+}
+
+/* Scroll margin for error messages */
+#signupError, #signupSuccess {
+    scroll-margin-top: 100px;
+}
+
+/* Shake animation for error */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.animate-shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Scale animation for toggle button */
+.scale-110 {
+    transform: scale(1.1);
+}
+
+/* Smooth transitions */
+.transition-all {
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+}
+
+/* Username suggestion buttons */
+#suggestionsList button {
+    transition: all 0.2s ease;
+}
+
+/* Scroll margin for error messages */
+#loginError, #loginSuccess {
+    scroll-margin-top: 100px;
+}
+
+/* Password strength indicator bars */
+.h-1 {
+    transition: background-color 0.3s ease;
+}
+
+/* Gradient border for login card */
+.border-t-4 {
+    border-top-width: 4px;
+}
+
+/* Demo hint clickable */
+.font-mono {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.font-mono:hover {
+    opacity: 0.8;
+}
+
+/* Remember me checkbox */
+input[type="checkbox"] {
+    transition: all 0.2s ease;
+}
+
+input[type="checkbox"]:checked {
+    transform: scale(1.05);
+}
+
+/* Password toggle button hover effect */
+#togglePassword:hover {
+    transform: scale(1.1);
+}
+
+/* Button focus ring */
+button:focus {
+    outline: none;
+    ring: 2px;
+    ring-offset: 2px;
+    ring-color: #10b981;
+}
+
+/* ====================================
+============== DASHBOARD ==============
+==================================== */
+/* Sidebar navigation styles */
+.nav-link {
+    color: #4b5563;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background-color: #ecfdf5; /* emerald-50 */
+    color: #059669; /* emerald-600 */
+}
+
+.nav-link.active {
+    background: linear-gradient(to right, #ecfdf5, #fff7ed);
+    color: #059669;
+    border-left: 3px solid #059669;
+}
+
+.nav-link.active svg {
+    color: #059669;
+}
+
+/* Line clamp utility */
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Sidebar Styles */
+.nav-item {
+    color: #4b5563;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.nav-item:hover {
+    background: linear-gradient(to right, #ecfdf5, #ffffff);
+    color: #059669;
+    transform: translateX(5px);
+}
+
+.nav-item.active {
+    background: linear-gradient(to right, #ecfdf5, #fff7ed);
+    color: #059669;
+    box-shadow: 0 2px 4px rgba(5, 150, 105, 0.1);
+}
+
+.nav-item.active .nav-icon {
+    background-color: #059669 !important;
+}
+
+.nav-item.active .nav-icon svg {
+    color: white !important;
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 70%;
+    background: linear-gradient(to bottom, #059669, #ea580c);
+    border-radius: 0 4px 4px 0;
+}
+
+/* Main content shift */
+.main-content {
+    transition: margin-left 0.3s ease-in-out;
+}
+
+@media (min-width: 768px) {
+    .main-content {
+        margin-left: 18rem; /* 72 * 4 = 288px for w-72 */
+    }
+}
+
+/* Custom scrollbar */
+#sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f3f4f6;
+}
+
+#sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+#sidebar::-webkit-scrollbar-track {
+    background: #f3f4f6;
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+    background-color: #d1d5db;
+    border-radius: 3px;
+}
+
+#sidebar::-webkit-scrollbar-thumb:hover {
+    background-color: #059669;
+}
+
+/* Resource cards hover effects */
+.resource-card {
+    transition: all 0.3s ease;
+}
+
+.resource-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+/* Gradient animations */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.bg-gradient-animate {
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+/* Loading spinner */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}

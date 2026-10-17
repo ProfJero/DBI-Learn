@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>Courses Management - Digital Bridge Initiative Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e88e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+    <link rel="apple-touch-icon" href="/icon/icon-192x192.png">
+    <link rel="mask-icon" href="/icon/favicon.png" color="#1e88e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DBI Learn">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+    <link rel="icon" type="image/png" href="/icon/favicon.png">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%);
+            overflow-x: hidden;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #1e88e5;
+            border-radius: 10px;
+        }
+        
+        .sidebar {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .sidebar-collapsed { width: 80px; }
+        .sidebar-expanded { width: 280px; }
+        
+        .nav-item {
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-item:hover {
+            background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(0, 200, 83, 0.1) 100%);
+            transform: translateX(5px);
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, #1e88e5 0%, #00c853 100%);
+            color: white;
+        }
+        
+        .nav-item.active i { color: white; }
+        
+        .main-content {
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .course-card {
+            transition: all 0.3s ease;
+        }
+        
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 1000;
+                transform: translateX(-100%);
+            }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
+        
+        .modal {
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        /* Rich Text Editor */
+        .rich-editor {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .editor-toolbar {
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        
+        .editor-toolbar button {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .editor-toolbar button:hover {
+            background: #e5e7eb;
+        }
+        
+        .editor-content {
+            min-height: 200px;
+            padding: 1rem;
+            outline: none;
+            background: white;
+        }
+
+        .editor-content ul, 
+        .editor-content ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding-left: 0.5rem;
+        }
+        
+        .editor-content ul li {
+            list-style-type: disc;
+            margin-bottom: 0.25rem;
+        }
+        
+        .editor-content ul ul li {
+            list-style-type: circle;
+        }
+        
+        .editor-content ul ul ul li {
+            list-style-type: square;
+        }
+        
+        .editor-content ol li {
+            list-style-type: decimal;
+            margin-bottom: 0.25rem;
+        }
+        
+        .editor-content ol ol li {
+            list-style-type: lower-alpha;
+        }
+        
+        .editor-content ol ol ol li {
+            list-style-type: lower-roman;
+        }
+        
+        /* Thumbnail Preview */
+        .thumbnail-preview {
+            margin-top: 0.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .thumbnail-preview img {
+            max-width: 150px;
+            max-height: 100px;
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            object-fit: cover;
+        }
+        
+        .thumbnail-preview .remove-preview {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: red;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .course-banner-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Image upload area */
+        .image-upload-area {
+            border: 2px dashed #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .image-upload-area:hover {
+            border-color: #1e88e5;
+            background: #f0f9ff;
+        }
+        
+        /* Instruction box */
+        .instruction-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .instruction-box h4 {
+            color: #92400e;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .instruction-box p {
+            color: #78350f;
+            font-size: 0.875rem;
+        }
+        
+        .instruction-box code {
+            background: #fff;
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Mobile Menu Overlay -->
+<div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+<div class="flex min-h-screen relative">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar sidebar-expanded bg-white shadow-2xl fixed h-full z-50 flex flex-col" style="width: 280px;">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img src="../logo/DBI-Learn Logo.png" alt="DBI Learn Logo" width="180px">
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <img src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=40&name=Admin" 
+                         alt="Profile" id="adminAvatar" class="w-10 h-10 rounded-full border-2 border-[#1e88e5]">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#00c853] rounded-full border-2 border-white"></span>
+                </div>
+                <div class="admin-info">
+                    <p class="text-sm font-semibold text-gray-800" id="adminName">Loading...</p>
+                    <p class="text-xs text-gray-500" id="adminRole">Administrator</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-6">
+            <div class="px-4 space-y-1">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-tachometer-alt w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Dashboard</span>
+                </a>
+                <a href="users.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-users w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Users</span>
+                </a>
+                <a href="courses.html" class="nav-item active flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-book w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Courses</span>
+                </a>
+                <a href="instructors.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-chalkboard-teacher w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Instructors</span>
+                </a>
+                <a href="analytics.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-chart-line w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Analytics</span>
+                </a>
+                <a href="certificate-generator.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-certificate w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Certificate Generator</span>
+                </a>
+                <a href="resources.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-download w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Resources</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-chart-line w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Reports</span>
+                </a>
+                <a href="engagement.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-comments w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Engagement</span>
+                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="pendingRepliesCount">0</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-cog w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Settings</span>
+                </a>
+            </div>
+            <div class="border-t border-gray-200 my-4"></div>
+            <div class="px-4 space-y-1">
+                <a href="support.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-headset w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Support Tickets</span>
+                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="openTicketsCount">0</span>
+                </a>
+                <a href="#" id="logoutBtn" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt w-5 h-5"></i>
+                    <span class="text-sm font-medium nav-text">Logout</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-200">
+            <div class="text-center">
+                <p class="text-xs text-gray-500 nav-text">Admin v4.0.0</p>
+                <p class="text-xs text-gray-400 nav-text mt-1">© 2026 DBI Learning</p>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <main id="mainContent" class="main-content flex-1 min-h-screen" style="margin-left: 280px;">
+        
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="px-6 py-4 flex items-center justify-between">
+                <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-[#1e88e5]">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-book text-[#1e88e5] text-xl"></i>
+                    <h1 class="text-xl font-semibold text-gray-800">Courses Management</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="notificationBtn" class="text-gray-600 hover:text-[#1e88e5] relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center" id="notificationCount">0</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <button id="adminMenuBtn" class="flex items-center space-x-2 focus:outline-none">
+                            <img src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=32&name=Admin" id="dropdownAvatar" class="w-8 h-8 rounded-full">
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        <div id="adminDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <a href="profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fas fa-user mr-2"></i> My Profile</a>
+                            <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fas fa-cog mr-2"></i> Settings</a>
+                            <hr class="my-1">
+                            <a href="#" id="logoutDropdown" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="p-6">
+            <!-- Actions Bar -->
+            <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex flex-wrap gap-2">
+                        <button class="status-filter active px-4 py-2 rounded-lg text-sm font-medium transition bg-[#1e88e5] text-white" data-status="all">All Courses</button>
+                        <button class="status-filter px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="published">Published</button>
+                        <button class="status-filter px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="draft">Draft</button>
+                        <button class="status-filter px-4 py-2 rounded-lg text-sm font-medium transition bg-gray-100 text-gray-700 hover:bg-gray-200" data-status="archived">Archived</button>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2 border-l border-gray-200 pl-4 ml-2">
+                        <span class="text-sm text-gray-500 font-medium flex items-center">Departments:</span>
+                        <button class="dept-filter active px-3 py-1 rounded-lg text-sm font-medium transition bg-[#1e88e5] text-white" data-dept="all">All</button>
+                        <div id="departmentFilters" class="flex flex-wrap gap-2"></div>
+                        <button id="addDepartmentBtn" class="px-3 py-1 rounded-lg text-sm font-medium transition bg-gray-100 text-gray-600 hover:bg-gray-200">
+                            <i class="fas fa-plus mr-1"></i> Add Dept
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="searchInput" placeholder="Search courses..." class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none w-64">
+                        </div>
+                        <button id="addCourseBtn" class="px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">
+                            <i class="fas fa-plus mr-2"></i> Add Course
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="coursesGrid">
+                <div class="skeleton h-80 rounded-xl"></div>
+                <div class="skeleton h-80 rounded-xl"></div>
+                <div class="skeleton h-80 rounded-xl"></div>
+            </div>
+            
+            <div class="mt-6 flex items-center justify-between">
+                <div class="text-sm text-gray-500" id="paginationInfo">Loading...</div>
+                <div class="flex space-x-2">
+                    <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50" disabled>Previous</button>
+                    <span id="currentPage" class="px-3 py-1 text-sm">Page 1</span>
+                    <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50">Next</button>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Course Modal -->
+<div id="courseModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden modal">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 id="modalTitle" class="text-xl font-semibold text-gray-800">Add New Course</h2>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <!-- Google Drive Instructions -->
+                <div class="instruction-box mb-4">
+                    <h4><i class="fas fa-info-circle mr-1"></i> Google Drive Images Setup</h4>
+                    <p>For images to display correctly, you must:</p>
+                    <ol class="text-xs mt-1 ml-4 list-decimal">
+                        <li>Share the image/file with "Anyone with the link"</li>
+                        <li>Set permission to "Viewer"</li>
+                        <li>Copy the share link and paste it below</li>
+                    </ol>
+                    <p class="text-xs mt-2"><strong>Example format:</strong> <code>https://drive.google.com/file/d/FILE_ID/view?usp=sharing</code></p>
+                </div>
+                
+                <form id="courseForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Course Title *</label>
+                            <input type="text" id="courseTitle" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Department *</label>
+                            <select id="courseCategory" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                                <option value="">Select department</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Short Description *</label>
+                        <input type="text" id="courseShortDesc" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Description</label>
+                        <div class="rich-editor">
+                            <div class="editor-toolbar">
+                                <button type="button" data-command="bold" title="Bold"><i class="fas fa-bold"></i></button>
+                                <button type="button" data-command="italic" title="Italic"><i class="fas fa-italic"></i></button>
+                                <button type="button" data-command="underline" title="Underline"><i class="fas fa-underline"></i></button>
+                                <button type="button" data-list="unordered" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                                <button type="button" data-list="ordered" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                                <button type="button" data-link="insert" title="Insert Link"><i class="fas fa-link"></i></button>
+                            </div>
+                            <div id="editorContent" class="editor-content" contenteditable="true"></div>
+                        </div>
+                        <textarea id="courseDescription" class="hidden"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duration (hours)</label>
+                            <input type="number" id="courseDuration" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Level</label>
+                            <select id="courseLevel" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="courseStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                                <option value="archived">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Google Drive Thumbnail URL -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Banner Thumbnail (Google Drive)</label>
+                        <input type="text" id="courseThumbnail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none" placeholder="Paste Google Drive share link here">
+                        <div id="thumbnailPreviewContainer" class="mt-2"></div>
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 mr-1"></i>
+                            <strong>Important:</strong> Make sure your Google Drive file is shared with "Anyone with the link" and has "Viewer" permission.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Instructor</label>
+                        <select id="courseInstructor" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                            <option value="">Select instructor</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="courseId">
+                    <button type="submit" id="saveCourseBtn" class="w-full px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">
+                        Save Course
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full modal">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Delete Course</h3>
+                <p class="text-gray-600 mb-4">Are you sure you want to delete this course? This will also delete all modules, lessons, and enrollments.</p>
+                <p id="deleteCourseTitle" class="text-sm font-medium text-gray-800 mb-6"></p>
+                <div class="flex space-x-3">
+                    <button id="confirmDeleteBtn" class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Delete</button>
+                    <button id="cancelDeleteBtn" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer" class="fixed bottom-4 right-4 z-50"></div>
+
+<script type="module" src="../js/admin/courses.js"></script>
+</body>
+</html>

@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Profile - Digital Bridge Initiative</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e88e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+    <link rel="apple-touch-icon" href="/icon/icon-192x192.png">
+    <link rel="mask-icon" href="/icon/favicon.png" color="#1e88e5">
+
+    <!-- Additional PWA meta for better UX -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DBI Learn">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icon/favicon.png">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%); overflow-x: hidden; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #1e88e5; border-radius: 10px; }
+        
+        .sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-collapsed { width: 80px; }
+        .sidebar-expanded { width: 280px; }
+        
+        .nav-item { transition: all 0.2s ease; position: relative; overflow: hidden; }
+        .nav-item:hover { background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(0, 200, 83, 0.1) 100%); transform: translateX(5px); }
+        .nav-item.active { background: linear-gradient(135deg, #1e88e5 0%, #00c853 100%); color: white; }
+        .nav-item.active i { color: white; }
+        
+        .main-content { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .profile-card { transition: all 0.3s ease; }
+        .profile-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        .activity-timeline { position: relative; }
+        .activity-item { position: relative; padding-left: 30px; }
+        .activity-item::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: linear-gradient(180deg, #1e88e5 0%, #00c853 100%); }
+        .activity-item:last-child::before { display: none; }
+        .activity-dot { position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; background: white; border: 3px solid #1e88e5; z-index: 1; }
+        
+        .avatar-upload { position: relative; }
+        .avatar-upload input { display: none; }
+        .avatar-preview { transition: all 0.3s ease; cursor: pointer; }
+        .avatar-preview:hover { opacity: 0.8; transform: scale(1.05); }
+        
+        .tooltip { position: relative; }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 50;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; z-index: 1000; transform: translateX(-100%); }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
+        
+        .modal { animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        .stat-card { transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-3px); }
+    </style>
+</head>
+<body>
+
+<div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+<div class="flex min-h-screen relative">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar sidebar-expanded bg-white shadow-2xl fixed h-full z-50 flex flex-col" style="width: 280px;">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img src="../logo/DBI-Learn Logo.png" alt="DBI Learn Logo" width="180px">
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <img src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=40&name=Admin" id="adminAvatar" class="w-10 h-10 rounded-full border-2 border-[#1e88e5]">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#00c853] rounded-full border-2 border-white"></span>
+                </div>
+                <div class="admin-info">
+                    <p class="text-sm font-semibold text-gray-800" id="adminName">Loading...</p>
+                    <p class="text-xs text-gray-500" id="adminRole">Administrator</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-6">
+            <div class="px-4 space-y-1">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-tachometer-alt w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Dashboard</span>
+                </a>
+                <a href="users.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-users w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Users</span>
+                </a>
+                <a href="courses.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-book w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Courses</span>
+                </a>
+                <a href="instructors.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-chalkboard-teacher w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Instructors</span>
+                <a href="analytics.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-chart-line w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Analytics</span>
+                </a>
+                <a href="certificate-generator.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-certificate w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Certificate Generator</span>
+                </a>
+                <a href="resources.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-download w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Resources</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-chart-line w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Reports</span>
+                </a>
+                <a href="engagement.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-comments w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Engagement</span>
+                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="pendingRepliesCount">0</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-cog w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Settings</span>
+                </a>
+            </div>
+            <div class="border-t border-gray-200 my-4"></div>
+            <div class="px-4 space-y-1">
+                <a href="support.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-headset w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Support Tickets</span>
+                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="openTicketsCount">0</span>
+                </a>
+                <a href="profile.html" class="nav-item active flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-user-circle w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">My Profile</span>
+                </a>
+                <a href="#" id="logoutBtn" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt w-5 h-5"></i>
+                    <span class="text-sm font-medium nav-text">Logout</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-200">
+            <div class="text-center">
+                <p class="text-xs text-gray-500 nav-text">Admin v4.0.0</p>
+                <p class="text-xs text-gray-400 nav-text mt-1">© 2026 DBI Learning</p>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main id="mainContent" class="main-content flex-1 min-h-screen" style="margin-left: 280px;">
+        
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="px-6 py-4 flex items-center justify-between">
+                <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-[#1e88e5]">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-user-circle text-[#1e88e5] text-xl"></i>
+                    <h1 class="text-xl font-semibold text-gray-800">My Profile</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="notificationBtn" class="text-gray-600 hover:text-[#1e88e5] relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center" id="notificationCount">0</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <button id="adminMenuBtn" class="flex items-center space-x-2 focus:outline-none">
+                            <img src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=32&name=Admin" id="dropdownAvatar" class="w-8 h-8 rounded-full">
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        <div id="adminDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <a href="profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fas fa-user mr-2"></i> My Profile</a>
+                            <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fas fa-cog mr-2"></i> Settings</a>
+                            <hr><a href="#" id="logoutDropdown" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="p-6">
+            <!-- Profile Header Card -->
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-[#1e88e5] to-[#00c853] h-32"></div>
+                <div class="relative px-6 pb-6">
+                    <div class="flex flex-col md:flex-row items-start md:items-end -mt-16 mb-4">
+                        <div class="relative">
+                            <img id="profileAvatar" src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=120&name=Admin" 
+                                 class="avatar-preview w-32 h-32 rounded-full border-4 border-white shadow-lg">
+                            <button id="changeAvatarBtn" class="absolute bottom-0 right-0 bg-[#1e88e5] text-white rounded-full p-2 text-xs hover:bg-[#009e42] transition">
+                                <i class="fas fa-camera"></i>
+                            </button>
+                            <input type="file" id="avatarUpload" accept="image/*" class="hidden">
+                        </div>
+                        <div class="md:ml-6 mt-4 md:mt-0 flex-1">
+                            <h1 id="profileName" class="text-2xl font-bold text-gray-800">Loading...</h1>
+                            <div class="flex flex-wrap items-center gap-2 mt-1">
+                                <span class="text-gray-500"><i class="fas fa-envelope mr-1"></i> <span id="profileEmail">-</span></span>
+                                <span class="text-gray-300">•</span>
+                                <span class="text-gray-500"><i class="fas fa-user-tag mr-1"></i> <span id="profileRole">-</span></span>
+                                <span class="text-gray-300">•</span>
+                                <span class="text-gray-500"><i class="fas fa-calendar-alt mr-1"></i> Joined <span id="joinDate">-</span></span>
+                            </div>
+                        </div>
+                        <div class="mt-4 md:mt-0">
+                            <a href="settings.html" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                                <i class="fas fa-edit mr-2"></i> Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="stat-card bg-white rounded-xl shadow-sm p-4">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-gray-500 text-sm">Platform Users</p><p class="text-2xl font-bold text-gray-800" id="totalUsers">0</p></div>
+                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"><i class="fas fa-users text-[#1e88e5]"></i></div>
+                    </div>
+                </div>
+                <div class="stat-card bg-white rounded-xl shadow-sm p-4">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-gray-500 text-sm">Total Courses</p><p class="text-2xl font-bold text-gray-800" id="totalCourses">0</p></div>
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"><i class="fas fa-book text-[#00c853]"></i></div>
+                    </div>
+                </div>
+                <div class="stat-card bg-white rounded-xl shadow-sm p-4">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-gray-500 text-sm">Support Tickets</p><p class="text-2xl font-bold text-gray-800" id="totalTickets">0</p></div>
+                        <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center"><i class="fas fa-ticket-alt text-yellow-600"></i></div>
+                    </div>
+                </div>
+                <div class="stat-card bg-white rounded-xl shadow-sm p-4">
+                    <div class="flex items-center justify-between">
+                        <div><p class="text-gray-500 text-sm">Admin Since</p><p class="text-2xl font-bold text-gray-800" id="adminSince">-</p></div>
+                        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center"><i class="fas fa-calendar text-purple-600"></i></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Details -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Personal Information -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">Full Name</label>
+                                <p class="text-gray-800 font-medium" id="infoFullName">-</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">Username</label>
+                                <p class="text-gray-800 font-medium" id="infoUsername">-</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">Email Address</label>
+                                <p class="text-gray-800 font-medium" id="infoEmail">-</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">Phone Number</label>
+                                <p class="text-gray-800 font-medium" id="infoPhone">Not provided</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">Role</label>
+                                <p class="text-gray-800 font-medium"><span class="role-admin px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700" id="infoRole">-</span></p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-500 mb-1">Department</label>
+                                <p class="text-gray-800 font-medium" id="infoDepartment">Administration</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-500 mb-1">Bio</label>
+                                <p class="text-gray-700" id="infoBio">No bio added yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div>
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h2>
+                        <div class="space-y-3">
+                            <a href="users.html" class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center"><i class="fas fa-users text-[#1e88e5]"></i></div>
+                                <div><p class="font-medium text-gray-800">Manage Users</p><p class="text-xs text-gray-500">View and manage all platform users</p></div>
+                            </a>
+                            <a href="courses.html" class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center"><i class="fas fa-book text-[#00c853]"></i></div>
+                                <div><p class="font-medium text-gray-800">Manage Courses</p><p class="text-xs text-gray-500">Create and edit courses</p></div>
+                            </a>
+                            <a href="support.html" class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center"><i class="fas fa-headset text-yellow-600"></i></div>
+                                <div><p class="font-medium text-gray-800">View Tickets</p><p class="text-xs text-gray-500">Check pending support tickets</p></div>
+                            </a>
+                            <a href="reports.html" class="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                                <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center"><i class="fas fa-chart-line text-purple-600"></i></div>
+                                <div><p class="font-medium text-gray-800">View Reports</p><p class="text-xs text-gray-500">Platform analytics and insights</p></div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="mt-6">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h2>
+                    <div id="activityTimeline" class="activity-timeline space-y-4">
+                        <div class="skeleton h-20 rounded-lg"></div>
+                        <div class="skeleton h-20 rounded-lg"></div>
+                        <div class="skeleton h-20 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full modal">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-800">Edit Profile</h2>
+                <button id="closeEditModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="editProfileForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                        <input type="text" id="editFullName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <input type="tel" id="editPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                        <textarea id="editBio" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none"></textarea>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">Save Changes</button>
+                        <button type="button" id="cancelEditModal" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="../js/admin/profile.js"></script>
+</body>
+</html>

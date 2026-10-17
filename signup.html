@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Digital Bridge Initiative</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e88e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+    <link rel="apple-touch-icon" href="/icon/icon-192x192.png">
+    <link rel="mask-icon" href="/icon/favicon.png" color="#1e88e5">
+
+    <!-- Additional PWA meta for better UX -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DBI Learn">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+
+    <link rel="icon" type="image/png" href="/icon/favicon.png">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+        
+        /* DBI Custom Colors */
+        .dbi-blue { color: #1e88e5; }
+        .dbi-green { color: #00c853; }
+        .dbi-dark-green { color: #009e42; }
+        .bg-dbi-blue { background-color: #1e88e5; }
+        .bg-dbi-green { background-color: #00c853; }
+        .bg-dbi-dark-green { background-color: #009e42; }
+        .border-dbi-blue { border-color: #1e88e5; }
+        .border-dbi-green { border-color: #00c853; }
+        .from-dbi-blue { --tw-gradient-from: #1e88e5; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(30, 136, 229, 0)); }
+        .to-dbi-green { --tw-gradient-to: #00c853; }
+        .to-dbi-dark-green { --tw-gradient-to: #009e42; }
+        .focus\:ring-dbi-blue:focus { --tw-ring-color: #1e88e5; }
+        .focus\:border-dbi-blue:focus { border-color: #1e88e5; }
+        .hover\:bg-dbi-blue:hover { background-color: #1e88e5; }
+        .hover\:bg-dbi-green:hover { background-color: #00c853; }
+        .hover\:bg-dbi-dark-green:hover { background-color: #009e42; }
+        
+        /* Date picker styling */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            background-color: #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-dbi-blue to-dbi-dark-green min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full">
+        <!-- Logo/Brand -->
+        <div class="text-center">
+            <div class="inline-block bg-white/10 backdrop-blur-sm rounded-2xl p-4 mb-4">
+                <a href="index.html"><img src="logo/B&W DBI-Learn Logo.png" alt="DBI Learn Logo"></a>
+            </div>
+        </div>
+        
+        <!-- Signup Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+            <!-- Progress Bar -->
+            <div class="mb-8">
+                <div class="flex justify-between mb-2">
+                    <span class="text-sm font-medium text-[#1e88e5]">Step <span id="currentStep">1</span> of 6</span>
+                    <span class="text-sm font-medium text-gray-500" id="stepName">Basic Information</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div class="progress-bar h-2.5 rounded-full transition-all duration-300" style="width: 16.67%; background: linear-gradient(to right, #1e88e5, #00c853);" id="progressBar"></div>
+                </div>
+            </div>
+            
+            <!-- Error Message -->
+            <div id="signupError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 hidden" role="alert"></div>
+            
+            <!-- Success Message -->
+            <div id="signupSuccess" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-4 hidden" role="alert"></div>
+            
+            <!-- Signup Form -->
+            <form id="signupForm">
+                <!-- Step 1: Basic Information -->
+                <div class="step" id="step1">
+                    <h2 class="text-xl font-semibold mb-4 text-[#1e88e5]">Basic Information</h2>
+                    <div class="space-y-4">
+                        <!-- Full Name -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" id="fullName" name="fullName" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Enter your full name">
+                        </div>
+                        
+                        <!-- Date of Birth -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth <span class="text-red-500">*</span></label>
+                            <input type="date" id="dateOfBirth" name="dateOfBirth" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                max="2016-12-31" min="1950-01-01">
+                            <p class="mt-1 text-xs text-gray-500">You must be at least 9 years old to join (born before 2017)</p>
+                            <div id="ageError" class="mt-1 text-xs text-red-500 hidden"></div>
+                        </div>
+                        
+                        <!-- Username with suggestions -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Username <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" id="username" name="username" required
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors pr-10"
+                                    placeholder="Choose a unique username">
+                                <!-- Username validation icons will be added dynamically -->
+                            </div>
+                            <div id="usernameSuggestions" class="mt-2 hidden">
+                                <p class="text-xs text-gray-500 mb-1">Suggested usernames:</p>
+                                <div class="flex flex-wrap gap-2" id="suggestionsList"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Email (Required) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address <span class="text-red-500">*</span></label>
+                            <input type="email" id="email" name="email" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Enter your email address">
+                            <p class="mt-1 text-xs text-gray-500">We'll send important updates to this email</p>
+                        </div>
+                        
+                        <!-- Phone Number (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <input type="tel" id="phone" name="phone"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Enter your phone number">
+                        </div>
+                        
+                        <!-- School Name with suggestions -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">School/Institution</label>
+                            <input type="text" id="school" name="school" list="schoolSuggestions"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Enter your school or institution">
+                            <datalist id="schoolSuggestions"></datalist>
+                        </div>
+                        
+                        <!-- Class/Grade -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Class / Grade <span class="text-red-500">*</span></label>
+                            <select id="grade" name="grade"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors" required>
+                                <option value="">Select your class</option>
+                                <option value="Basic 5">Basic 5</option>
+                                <option value="Basic 6">Basic 6</option>
+                                <option value="JHS 1">JHS 1</option>
+                                <option value="JHS 2">JHS 2</option>
+                                <option value="JHS 3">JHS 3</option>
+                                <option value="SHS 1">SHS 1</option>
+                                <option value="SHS 2">SHS 2</option>
+                                <option value="SHS 3">SHS 3</option>
+                                <option value="Tertiary">Tertiary</option>
+                                <option value="Adult Learner">Adult Learner</option>
+                                <option value="Professional">Professional</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Gender -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Gender <span class="text-red-500">*</span></label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="radio" name="gender" value="Male" required class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300">
+                                    <span class="ml-2 text-gray-700">Male</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="gender" value="Female" required class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300">
+                                    <span class="ml-2 text-gray-700">Female</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Account & Access -->
+                <div class="step hidden" id="step2">
+                    <h2 class="text-xl font-semibold mb-4 text-[#1e88e5]">Account & Access</h2>
+                    <div class="space-y-4">
+                        <!-- Password with toggle -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="password" id="password" name="password" required
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors pr-12"
+                                    placeholder="Create a password (min. 6 characters)">
+                                <button type="button" id="togglePassword" class="absolute right-3 top-3 text-gray-500 hover:text-[#1e88e5] focus:outline-none">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500">Password must be at least 6 characters long</p>
+                        </div>
+                        
+                        <!-- Confirm Password with toggle and validation indicator -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="password" id="confirmPassword" name="confirmPassword" required
+                                    class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors pr-12"
+                                    placeholder="Re-enter your password">
+                                <button type="button" id="toggleConfirmPassword" class="absolute right-3 top-3 text-gray-500 hover:text-[#1e88e5] focus:outline-none">
+                                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                </button>
+                                <!-- Validation icons -->
+                                <div class="absolute right-12 top-3 hidden" id="passwordMatchIcon">
+                                    <svg class="h-6 w-6 text-[#00c853]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                </div>
+                                <div class="absolute right-12 top-3 hidden" id="passwordMismatchIcon">
+                                    <svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden role field - always student -->
+                        <input type="hidden" id="role" name="role" value="student">
+                    </div>
+                </div>
+                
+                <!-- Step 3: Learning Interests -->
+                <div class="step hidden" id="step3">
+                    <h2 class="text-xl font-semibold mb-4 text-[#1e88e5]">Learning Interests</h2>
+                    <div class="space-y-4">
+                        <!-- Area of Interest - Required -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">What would you like to learn? <span class="text-red-500">*</span></label>
+                            <div class="grid grid-cols-2 gap-3" id="interestsContainer">
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-[#1e88e5]/10 transition-colors interest-option">
+                                    <input type="checkbox" name="interest" value="Web Development" class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded interest-checkbox">
+                                    <span class="ml-2 text-gray-700">Web Development</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-[#1e88e5]/10 transition-colors interest-option">
+                                    <input type="checkbox" name="interest" value="Mobile App Development" class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded interest-checkbox">
+                                    <span class="ml-2 text-gray-700">Mobile App Development</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-[#1e88e5]/10 transition-colors interest-option">
+                                    <input type="checkbox" name="interest" value="Data Science" class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded interest-checkbox">
+                                    <span class="ml-2 text-gray-700">Data Science</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-[#1e88e5]/10 transition-colors interest-option">
+                                    <input type="checkbox" name="interest" value="Artificial Intelligence" class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded interest-checkbox">
+                                    <span class="ml-2 text-gray-700">Artificial Intelligence</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-[#1e88e5]/10 transition-colors interest-option">
+                                    <input type="checkbox" name="interest" value="Cybersecurity" class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded interest-checkbox">
+                                    <span class="ml-2 text-gray-700">Cybersecurity</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-[#1e88e5]/10 transition-colors interest-option">
+                                    <input type="checkbox" name="interest" value="Cloud Computing" class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded interest-checkbox">
+                                    <span class="ml-2 text-gray-700">Cloud Computing</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-[#1e88e5]/10 transition-colors interest-option">
+                                    <input type="checkbox" name="interest" value="Digital Marketing" class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded interest-checkbox">
+                                    <span class="ml-2 text-gray-700">Digital Marketing</span>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-[#1e88e5]/10 transition-colors interest-option">
+                                    <input type="checkbox" name="interest" value="Graphic Design" class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded interest-checkbox">
+                                    <span class="ml-2 text-gray-700">Graphic Design</span>
+                                </label>
+                            </div>
+                            <p class="mt-1 text-xs text-gray-500 hidden" id="interestError">Please select at least one area of interest</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 4: Parent/Guardian Info -->
+                <div class="step hidden" id="step4">
+                    <h2 class="text-xl font-semibold mb-4 text-[#1e88e5]">Parent/Guardian Information</h2>
+                    <div class="space-y-4">
+                        <p class="text-sm text-gray-600 mb-2">For students under 18, please provide guardian information</p>
+                        
+                        <!-- Guardian Name (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Guardian Name <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <input type="text" id="guardianName" name="guardianName"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Enter guardian's full name">
+                        </div>
+                        
+                        <!-- Guardian Phone (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Guardian Phone Number <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <input type="tel" id="guardianPhone" name="guardianPhone"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Enter guardian's phone number">
+                        </div>
+                        
+                        <!-- Guardian Email (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Guardian Email <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <input type="email" id="guardianEmail" name="guardianEmail"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Enter guardian's email">
+                        </div>
+                        
+                        <!-- Consent Checkbox - Required -->
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" id="consent" name="consent" required
+                                    class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded">
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="consent" class="text-gray-600">
+                                    I confirm that I have obtained consent from my parent/guardian to participate in this program <span class="text-red-500">*</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 5: Additional Information -->
+                <div class="step hidden" id="step5">
+                    <h2 class="text-xl font-semibold mb-4 text-[#1e88e5]">Additional Information</h2>
+                    <div class="space-y-4">
+                        <!-- Location/Town - Required -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Location (Town/City) <span class="text-red-500">*</span></label>
+                            <input type="text" id="location" name="location" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Enter your town or city">
+                        </div>
+                        
+                        <!-- Previous IT Experience - Required -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Previous Tech Experience <span class="text-red-500">*</span></label>
+                            <select id="experience" name="experience" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors">
+                                <option value="">Select experience level</option>
+                                <option value="None">None - I'm a complete beginner</option>
+                                <option value="Beginner">Beginner - Some basic knowledge</option>
+                                <option value="Intermediate">Intermediate - Comfortable with technology</option>
+                                <option value="Advanced">Advanced - I have significant experience</option>
+                            </select>
+                        </div>
+                        
+                        <!-- How did you hear about DBI? - Required -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">How did you hear about Digital Bridge Initiative? <span class="text-red-500">*</span></label>
+                            <select id="referral" name="referral" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors">
+                                <option value="">Select an option</option>
+                                <option value="Social Media">Social Media</option>
+                                <option value="Friend/Family">Friend or Family Member</option>
+                                <option value="School">School/Educational Institution</option>
+                                <option value="Advertisement">Advertisement</option>
+                                <option value="Community Event">Community Event</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Goals (Optional) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">What are your learning goals? <span class="text-gray-400 text-xs">(optional)</span></label>
+                            <textarea id="goals" name="goals" rows="3"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#1e88e5] focus:border-[#1e88e5] transition-colors"
+                                placeholder="Tell us what you hope to achieve with DBI Learning..."></textarea>
+                        </div>
+                        
+                        <!-- Terms and Conditions -->
+                        <div class="flex items-start mt-4">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" id="terms" name="terms" required
+                                    class="h-4 w-4 text-[#00c853] focus:ring-[#1e88e5] border-gray-300 rounded">
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="terms" class="text-gray-600">
+                                    I agree to the 
+                                    <a href="#" class="font-medium text-[#1e88e5] hover:text-[#009e42]">Terms of Service</a> 
+                                    and 
+                                    <a href="#" class="font-medium text-[#1e88e5] hover:text-[#009e42]">Privacy Policy</a> <span class="text-red-500">*</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation Buttons -->
+                <div class="flex justify-between mt-8">
+                    <button type="button" id="prevBtn" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200 hidden">
+                        Previous
+                    </button>
+                    <button type="button" id="nextBtn" class="px-6 py-2 text-white rounded-lg transition duration-200 ml-auto" style="background: linear-gradient(to right, #1e88e5, #00c853);">
+                        Next
+                    </button>
+                    <button type="submit" id="submitBtn" class="px-6 py-2 text-white rounded-lg transition duration-200 hidden" style="background: linear-gradient(to right, #1e88e5, #009e42);">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Login Link -->
+            <div class="mt-6 text-center">
+                <p class="text-gray-600">
+                    Already have an account? 
+                    <a href="login.html" class="font-semibold text-[#1e88e5] hover:text-[#009e42]">Sign In</a>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-6 text-blue-100 text-sm">
+            <p>&copy; 2026 Digital Bridge Initiative. Bridging the digital divide.</p>
+            <p class="text-xs mt-1 text-blue-200">Empowering communities through technology education</p>
+        </div>
+    </div>
+    
+    <script type="module" src="js/signup.js"></script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            console.log('New Service Worker installing...');
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New content is available, show notification
+                                    showUpdateNotification();
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+        
+        // Show update notification
+        function showUpdateNotification() {
+            const updateToast = document.createElement('div');
+            updateToast.className = 'fixed bottom-4 right-4 bg-[#1e88e5] text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-bounce';
+            updateToast.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-download"></i>
+                    <span>New version available! Refresh to update.</span>
+                    <button onclick="location.reload()" class="bg-white text-[#1e88e5] px-3 py-1 rounded ml-2">Update</button>
+                </div>
+            `;
+            document.body.appendChild(updateToast);
+            
+            // Auto remove after 10 seconds
+            setTimeout(() => {
+                updateToast.remove();
+            }, 10000);
+        }
+        
+        // Enable PWA installation prompt
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Show install button (you can add this to your UI)
+            const installButton = document.getElementById('installPwaBtn');
+            if (installButton) {
+                installButton.style.display = 'block';
+                installButton.addEventListener('click', () => {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        if (choiceResult.outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        } else {
+                            console.log('User dismissed the install prompt');
+                        }
+                        deferredPrompt = null;
+                    });
+                });
+            }
+        });
+        
+        // Check if app is installed
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('DBI Learn was installed as a PWA');
+            // Send analytics event
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'pwa_installed');
+            }
+        });
+    </script>
+
+    <!-- Floating Install Button (shows as a subtle button) -->
+    <div id="installPwaContainer" style="display: none;">
+        <button id="installPwaBtn" class="fixed bottom-6 right-6 bg-gradient-to-r from-[#1e88e5] to-[#00c853] text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all z-40 flex items-center space-x-2 hover:scale-105">
+            <i class="fas fa-download"></i>
+            <span class="text-sm font-medium">Install App</span>
+        </button>
+    </div>
+</body>
+</html>

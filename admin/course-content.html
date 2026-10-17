@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Content Management - Digital Bridge Initiative Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e88e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+    <link rel="apple-touch-icon" href="/icon/icon-192x192.png">
+    <link rel="mask-icon" href="/icon/favicon.png" color="#1e88e5">
+
+    <!-- Additional PWA meta for better UX -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DBI Learn">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icon/favicon.png">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%); overflow-x: hidden; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #1e88e5; border-radius: 10px; }
+        
+        .sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-collapsed { width: 80px; }
+        .sidebar-expanded { width: 280px; }
+        
+        .nav-item { transition: all 0.2s ease; position: relative; overflow: hidden; }
+        .nav-item:hover { background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(0, 200, 83, 0.1) 100%); transform: translateX(5px); }
+        .nav-item.active { background: linear-gradient(135deg, #1e88e5 0%, #00c853 100%); color: white; }
+        .nav-item.active i { color: white; }
+        
+        .main-content { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .module-card, .lesson-card { transition: all 0.3s ease; }
+        .module-card:hover, .lesson-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        .rich-editor {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .editor-toolbar {
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        .editor-toolbar button {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .editor-toolbar button:hover { background: #e5e7eb; }
+        .editor-content {
+            min-height: 200px;
+            padding: 1rem;
+            outline: none;
+        }
+        
+        .tooltip { position: relative; }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 50;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; z-index: 1000; transform: translateX(-100%); }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
+        
+        .modal { animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        .drag-area {
+            border: 2px dashed #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        .drag-area.drag-over {
+            border-color: #1e88e5;
+            background: rgba(30, 136, 229, 0.05);
+        }
+        
+        .lesson-type-badge {
+            transition: all 0.2s ease;
+        }
+        .lesson-type-badge:hover { transform: scale(1.05); }
+        .lesson-type-badge.active {
+            background: #1e88e5;
+            color: white;
+            border-color: #1e88e5;
+        }
+        
+        /* Resource type cards */
+        .resource-type-card {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .resource-type-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .resource-type-card.selected {
+            border-color: #1e88e5;
+            background: rgba(30, 136, 229, 0.05);
+        }
+        
+        /* File upload preview */
+        .file-preview {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background: #f9fafb;
+        }
+
+        /* Quiz question styles */
+        .quiz-question-card {
+            transition: all 0.2s ease;
+        }
+        .quiz-question-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-option {
+            transition: all 0.2s ease;
+        }
+        .quiz-option:hover {
+            background: #f9fafb;
+        }
+        .short-answer-input {
+            font-family: 'Inter', monospace;
+        }
+
+        /* List styles for editor content */
+        .editor-content ul, .editor-content ol {
+            margin-left: 1.5rem !important;
+            margin-bottom: 0.75rem !important;
+            padding-left: 0.5rem !important;
+        }
+        .editor-content ul li {
+            list-style-type: disc !important;
+            margin-bottom: 0.25rem !important;
+        }
+        .editor-content ul ul li {
+            list-style-type: circle !important;
+        }
+        .editor-content ul ul ul li {
+            list-style-type: square !important;
+        }
+        .editor-content ol li {
+            list-style-type: decimal !important;
+            margin-bottom: 0.25rem !important;
+        }
+        .editor-content ol ol li {
+            list-style-type: lower-alpha !important;
+        }
+        .editor-content ol ol ol li {
+            list-style-type: lower-roman !important;
+        }
+        .editor-content img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+<div class="flex min-h-screen relative">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar sidebar-expanded bg-white shadow-2xl fixed h-full z-50 flex flex-col" style="width: 280px;">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img src="../logo/DBI-Learn Logo.png" alt="DBI Learn Logo" width="180px">
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <img src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=40&name=Admin" id="adminAvatar" class="w-10 h-10 rounded-full border-2 border-[#1e88e5]">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#00c853] rounded-full border-2 border-white"></span>
+                </div>
+                <div class="admin-info">
+                    <p class="text-sm font-semibold text-gray-800" id="adminName">Loading...</p>
+                    <p class="text-xs text-gray-500" id="adminRole">Course Manager</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-6">
+            <div class="px-4 space-y-1">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-tachometer-alt w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Dashboard</span>
+                </a>
+                <a href="courses.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-book w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Courses</span>
+                </a>
+                <a href="course-content.html" class="nav-item active flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-edit w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Course Content</span>
+                </a>
+            </div>
+            <div class="border-t border-gray-200 my-4"></div>
+            <div class="px-4 space-y-1">
+                <a href="#" id="logoutBtn" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt w-5 h-5"></i>
+                    <span class="text-sm font-medium nav-text">Logout</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-200">
+            <div class="text-center">
+                <p class="text-xs text-gray-500 nav-text">Admin v4.0.0</p>
+                <p class="text-xs text-gray-400 nav-text mt-1">© 2026 DBI Learning</p>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main id="mainContent" class="main-content flex-1 min-h-screen" style="margin-left: 280px;">
+        
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="px-6 py-4 flex items-center justify-between">
+                <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-[#1e88e5]">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-edit text-[#1e88e5] text-xl"></i>
+                    <h1 class="text-xl font-semibold text-gray-800">Course Content Management</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="notificationBtn" class="text-gray-600 hover:text-[#1e88e5] relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs" id="notificationCount">0</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <button id="adminMenuBtn" class="flex items-center space-x-2 focus:outline-none">
+                            <img src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=32&name=Admin" id="dropdownAvatar" class="w-8 h-8 rounded-full">
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        <div id="adminDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <a href="profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fas fa-user mr-2"></i> My Profile</a>
+                            <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fas fa-cog mr-2"></i> Settings</a>
+                            <hr><a href="#" id="logoutDropdown" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="p-6">
+            <!-- Course Selector -->
+            <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Course</label>
+                        <select id="courseSelector" class="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                            <option value="">-- Select a course to manage content --</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button id="previewCourseBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                            <i class="fas fa-eye mr-2"></i> Preview
+                        </button>
+                        <button id="viewCourseBtn" class="px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">
+                            <i class="fas fa-arrow-right mr-2"></i> View Course
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Course Info Card -->
+            <div id="courseInfoCard" class="bg-gradient-to-r from-[#1e88e5] to-[#00c853] rounded-xl p-6 mb-6 hidden">
+                <div class="flex flex-wrap items-center justify-between">
+                    <div>
+                        <h2 id="selectedCourseTitle" class="text-2xl font-bold text-white mb-2">Course Title</h2>
+                        <p id="selectedCourseDesc" class="text-blue-100">Course description will appear here</p>
+                    </div>
+                    <div class="flex space-x-2 mt-4 md:mt-0">
+                        <span id="selectedCourseStatus" class="px-3 py-1 bg-white/20 rounded-full text-white text-sm">Status</span>
+                        <span id="selectedCourseLevel" class="px-3 py-1 bg-white/20 rounded-full text-white text-sm">Level</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Management Tabs -->
+            <div id="contentTabs" class="hidden">
+                <div class="mb-6 border-b border-gray-200">
+                    <div class="flex space-x-6 overflow-x-auto">
+                        <button class="tab-btn active pb-3 px-1 text-[#1e88e5] border-b-2 border-[#1e88e5] font-medium" data-tab="modules">Modules & Lessons</button>
+                        <button class="tab-btn pb-3 px-1 text-gray-500 hover:text-gray-700 font-medium" data-tab="resources">Resources</button>
+                        <button class="tab-btn pb-3 px-1 text-gray-500 hover:text-gray-700 font-medium" data-tab="quizzes">Quizzes</button>
+                    </div>
+                </div>
+                
+                <!-- Modules & Lessons Tab -->
+                <div id="modulesTab" class="tab-content active">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Course Modules</h2>
+                        <button id="addModuleBtn" class="px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">
+                            <i class="fas fa-plus mr-2"></i> Add Module
+                        </button>
+                    </div>
+                    <div id="modulesContainer" class="space-y-4">
+                        <div class="skeleton h-32 rounded-lg"></div>
+                    </div>
+                </div>
+                
+                <!-- Resources Tab -->
+                <div id="resourcesTab" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Course Resources</h2>
+                        <button id="addResourceBtn" class="px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">
+                            <i class="fas fa-plus mr-2"></i> Add Resource
+                        </button>
+                    </div>
+                    <div id="resourcesContainer" class="space-y-3">
+                        <div class="skeleton h-20 rounded-lg"></div>
+                    </div>
+                </div>
+                
+                <!-- Quizzes Tab -->
+                <div id="quizzesTab" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Course Quizzes</h2>
+                        <button id="addQuizBtn" class="px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">
+                            <i class="fas fa-plus mr-2"></i> Add Quiz
+                        </button>
+                    </div>
+                    <div id="quizzesContainer" class="space-y-4">
+                        <div class="skeleton h-32 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Module Modal -->
+<div id="moduleModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden modal">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 id="moduleModalTitle" class="text-xl font-semibold text-gray-800">Add New Module</h2>
+                <button id="closeModuleModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <form id="moduleForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Module Title *</label>
+                        <input type="text" id="moduleTitle" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Module Description</label>
+                        <textarea id="moduleDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none"></textarea>
+                    </div>
+                    
+                    <!-- Banner Image Field -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Module Banner Image (Google Drive)</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-[#1e88e5] transition cursor-pointer" id="bannerUploadArea">
+                            <div class="text-center">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-600">Click to add Google Drive image link</p>
+                                <p class="text-xs text-gray-500 mt-1">Supports: Google Drive shareable links (JPEG, PNG, GIF)</p>
+                            </div>
+                        </div>
+                        <div id="bannerPreview" class="mt-3 hidden">
+                            <div class="relative inline-block">
+                                <img id="bannerPreviewImg" src="" alt="Banner Preview" class="w-full max-h-40 object-cover rounded-lg border border-gray-200">
+                                <button type="button" id="removeBannerBtn" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="moduleBannerUrl">
+                        <p class="text-xs text-gray-500 mt-1">Add a banner image for this module. This will appear at the top of the module on the student side.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Order Number</label>
+                        <input type="number" id="moduleOrder" value="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    <div class="mb-4">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="quizRequiredCheckbox" class="w-4 h-4 text-[#1e88e5]">
+                            <span class="text-sm font-medium text-gray-700">Require Quiz to Complete Module</span>
+                        </label>
+                    </div>
+                    <div class="mb-4" id="passMarkContainer">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pass Mark (%)</label>
+                        <input type="number" id="passMarkInput" min="0" max="100" value="70" 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        <p class="text-xs text-gray-500 mt-1">Students must score at least this percentage to pass the module</p>
+                    </div>
+                    <input type="hidden" id="moduleId">
+                    <div class="flex space-x-3">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">Save Module</button>
+                        <button type="button" id="cancelModuleModal" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lesson Modal - Enhanced with Rich Text Description -->
+<div id="lessonModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden modal">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 id="lessonModalTitle" class="text-xl font-semibold text-gray-800">Add New Lesson</h2>
+                <button id="closeLessonModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <form id="lessonForm">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Lesson Title *</label>
+                        <input type="text" id="lessonTitle" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    
+                    <!-- Lesson Description / Facilitator Notes - Now with Rich Text Editor -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Lesson Description / Facilitator Notes</label>
+                        <div class="rich-editor">
+                            <div class="editor-toolbar">
+                                <button type="button" onclick="formatText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                                <button type="button" onclick="formatText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                                <button type="button" onclick="formatText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                                <button type="button" onclick="insertBulletedList()" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
+                                <button type="button" onclick="insertNumberedList()" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                                <button type="button" onclick="insertLink()" title="Insert Link"><i class="fas fa-link"></i></button>
+                            </div>
+                            <div id="lessonDescriptionEditor" class="editor-content min-h-[120px]" contenteditable="true" placeholder="Provide a brief overview of what students will learn in this lesson. Facilitators can use this to introduce the lesson content..."></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Click inside the editor first, then use the toolbar to format. This description will appear on the student side.</p>
+                    </div>
+
+                    <!-- Lesson Banner Image -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Lesson Banner Image (Google Drive)</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-[#1e88e5] transition cursor-pointer" id="lessonBannerUploadArea">
+                            <div class="text-center">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                <p class="text-sm text-gray-600">Click to add Google Drive image link for this lesson</p>
+                                <p class="text-xs text-gray-500 mt-1">Supports: Google Drive shareable links (JPEG, PNG, GIF)</p>
+                            </div>
+                        </div>
+                        <div id="lessonBannerPreview" class="mt-3 hidden">
+                            <div class="relative inline-block">
+                                <img id="lessonBannerPreviewImg" src="" alt="Lesson Banner Preview" class="w-full max-h-32 object-cover rounded-lg border border-gray-200">
+                                <button type="button" id="removeLessonBannerBtn" class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="hidden" id="lessonBannerUrl">
+                        <p class="text-xs text-gray-500 mt-1">Add a banner image for this lesson. This will appear at the top of the lesson on the student side.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Lesson Type *</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <button type="button" class="lesson-type-badge px-3 py-2 border rounded-lg text-sm" data-type="video" onclick="selectLessonType('video')">
+                                <i class="fas fa-video mr-1"></i> Video
+                            </button>
+                            <button type="button" class="lesson-type-badge px-3 py-2 border rounded-lg text-sm" data-type="text" onclick="selectLessonType('text')">
+                                <i class="fas fa-file-alt mr-1"></i> Text
+                            </button>
+                            <button type="button" class="lesson-type-badge px-3 py-2 border rounded-lg text-sm" data-type="code" onclick="selectLessonType('code')">
+                                <i class="fas fa-code mr-1"></i> Code
+                            </button>
+                            <button type="button" class="lesson-type-badge px-3 py-2 border rounded-lg text-sm" data-type="quiz" onclick="selectLessonType('quiz')">
+                                <i class="fas fa-question-circle mr-1"></i> Quiz
+                            </button>
+                        </div>
+                        <input type="hidden" id="lessonType" value="video">
+                    </div>
+                    
+                    <!-- Video Content -->
+                    <div id="videoContent" class="lesson-content">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">YouTube/Video URL</label>
+                            <input type="url" id="videoUrl" placeholder="https://www.youtube.com/watch?v=..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                            <p class="text-xs text-gray-500 mt-1">Support: YouTube, Vimeo, Google Drive, or direct video URL</p>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Video Duration (minutes)</label>
+                            <input type="number" id="videoDuration" placeholder="e.g., 15" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                        <div class="mb-4 border-t border-gray-200 pt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Lesson Content (After Video)</label>
+                            <div class="rich-editor">
+                                <div class="editor-toolbar">
+                                    <button type="button" onclick="formatText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                                    <button type="button" onclick="formatText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                                    <button type="button" onclick="formatText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                                    <button type="button" onclick="insertBulletedList()" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" onclick="insertNumberedList()" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                                    <button type="button" onclick="insertLink()" title="Insert Link"><i class="fas fa-link"></i></button>
+                                    <button type="button" onclick="insertInlineImage()" title="Insert Image"><i class="fas fa-image"></i></button>
+                                </div>
+                                <div id="videoLessonContent" class="editor-content" contenteditable="true"></div>
+                            </div>
+                            <textarea id="videoLessonContentValue" class="hidden"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Click inside the editor first, then use the toolbar buttons to format. Add images that will display directly in the lesson content.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Text Content -->
+                    <div id="textContent" class="lesson-content hidden">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Lesson Content</label>
+                            <div class="rich-editor">
+                                <div class="editor-toolbar">
+                                    <button type="button" onclick="formatText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                                    <button type="button" onclick="formatText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                                    <button type="button" onclick="formatText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                                    <button type="button" onclick="insertBulletedList()" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" onclick="insertNumberedList()" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                                    <button type="button" onclick="insertLink()" title="Insert Link"><i class="fas fa-link"></i></button>
+                                    <button type="button" onclick="insertInlineImage()" title="Insert Image"><i class="fas fa-image"></i></button>
+                                </div>
+                                <div id="textEditor" class="editor-content" contenteditable="true"></div>
+                            </div>
+                            <textarea id="textContentValue" class="hidden"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Click inside the editor first, then use the toolbar buttons to format. Add images that will display directly in the lesson content.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Code Content (keep as is, similar structure) -->
+                    <div id="codeContent" class="lesson-content hidden">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Programming Language</label>
+                            <select id="codeLanguage" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                                <option value="javascript">JavaScript</option>
+                                <option value="python">Python</option>
+                                <option value="html">HTML/CSS</option>
+                                <option value="java">Java</option>
+                                <option value="cpp">C++</option>
+                                <option value="sql">SQL</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Code Snippet</label>
+                            <textarea id="codeSnippet" rows="8" class="w-full font-mono text-sm px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none" placeholder="Write your code here..."></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Code Explanation</label>
+                            <textarea id="codeExplanation" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none" placeholder="Explain what this code does..."></textarea>
+                        </div>
+                        <div class="mb-4 border-t border-gray-200 pt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Additional Content</label>
+                            <div class="rich-editor">
+                                <div class="editor-toolbar">
+                                    <button type="button" onclick="formatText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                                    <button type="button" onclick="formatText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                                    <button type="button" onclick="formatText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                                    <button type="button" onclick="insertBulletedList()" title="Bulleted List"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" onclick="insertNumberedList()" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                                    <button type="button" onclick="insertLink()" title="Insert Link"><i class="fas fa-link"></i></button>
+                                    <button type="button" onclick="insertInlineImage()" title="Insert Image"><i class="fas fa-image"></i></button>
+                                </div>
+                                <div id="codeAdditionalContent" class="editor-content" contenteditable="true"></div>
+                            </div>
+                            <textarea id="codeAdditionalContentValue" class="hidden"></textarea>
+                            <p class="text-xs text-gray-500 mt-1">Click inside the editor first, then use the toolbar buttons to format.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Quiz Content -->
+                    <div id="quizContent" class="lesson-content hidden">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Title</label>
+                            <input type="text" id="quizTitle" placeholder="e.g., Module 1 Assessment" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quiz Description</label>
+                            <textarea id="quizDescription" rows="2" placeholder="Instructions or description for students..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none"></textarea>
+                        </div>
+                        
+                        <!-- Image Links Section for Quiz -->
+                        <div class="mb-4 border-t border-gray-200 pt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Reference Images (Optional)</label>
+                            <div id="quizImageLinksContainer" class="space-y-2 mb-3">
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" placeholder="Image description" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none" id="quizImageDesc_0">
+                                    <input type="url" placeholder="Google Drive Image URL" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none" id="quizImageUrl_0">
+                                    <button type="button" onclick="addQuizImageLink()" class="px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Add Google Drive image links that students can click to view reference images.</p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Questions</label>
+                            <div id="quizQuestionsContainer" class="space-y-4 mb-4"></div>
+                            <div class="flex space-x-2 mt-4 pt-4 border-t border-gray-200">
+                                <button type="button" onclick="addQuizQuestion('multiple_choice')" class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                    <i class="fas fa-plus mr-1"></i> Multiple Choice
+                                </button>
+                                <button type="button" onclick="addQuizQuestion('true_false')" class="px-4 py-2 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600">
+                                    <i class="fas fa-check-circle mr-1"></i> True/False
+                                </button>
+                                <button type="button" onclick="addQuizQuestion('short_answer')" class="px-4 py-2 text-sm bg-purple-500 text-white rounded-lg hover:bg-purple-600">
+                                    <i class="fas fa-keyboard mr-1"></i> Short Answer
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Time Limit (minutes)</label>
+                            <input type="number" id="quizTimeLimit" value="30" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Passing Score (%)</label>
+                            <input type="number" id="quizPassMark" value="70" min="0" max="100" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                    </div>
+                    
+                    <!-- Common Image Links Section for All Lesson Types -->
+                    <div class="mb-4 border-t border-gray-200 pt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Reference Images (Google Drive Links)</label>
+                        <div id="imageLinksContainer" class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" placeholder="Image description" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none" id="imageDesc_0">
+                                <input type="url" placeholder="Google Drive Image URL" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none" id="imageUrl_0">
+                                <button type="button" onclick="addImageLink()" class="px-3 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42]">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Add Google Drive image links that students can click to view reference images.</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Order Number</label>
+                        <input type="number" id="lessonOrder" value="1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Estimated Duration (minutes)</label>
+                        <input type="number" id="lessonDuration" placeholder="Estimated minutes to complete" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    <input type="hidden" id="lessonId">
+                    <input type="hidden" id="currentModuleId">
+                    <div class="flex space-x-3">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">Save Lesson</button>
+                        <button type="button" id="cancelLessonModal" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Resource Modal -->
+<div id="resourceModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden modal">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-800">
+                    <i class="fas fa-download text-[#1e88e5] mr-2"></i>
+                    Add Course Resource
+                </h2>
+                <button id="closeResourceModal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <form id="resourceForm">
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Resource Type *</label>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div class="resource-type-card border-2 rounded-xl p-3 text-center cursor-pointer" data-type="pdf">
+                                <i class="fas fa-file-pdf text-3xl text-red-500 mb-2"></i>
+                                <p class="text-sm font-medium">PDF Document</p>
+                            </div>
+                            <div class="resource-type-card border-2 rounded-xl p-3 text-center cursor-pointer" data-type="doc">
+                                <i class="fas fa-file-word text-3xl text-blue-500 mb-2"></i>
+                                <p class="text-sm font-medium">Word Document</p>
+                            </div>
+                            <div class="resource-type-card border-2 rounded-xl p-3 text-center cursor-pointer" data-type="video">
+                                <i class="fas fa-file-video text-3xl text-purple-500 mb-2"></i>
+                                <p class="text-sm font-medium">Video File</p>
+                            </div>
+                            <div class="resource-type-card border-2 rounded-xl p-3 text-center cursor-pointer" data-type="link">
+                                <i class="fas fa-link text-3xl text-green-500 mb-2"></i>
+                                <p class="text-sm font-medium">External Link</p>
+                            </div>
+                            <div class="resource-type-card border-2 rounded-xl p-3 text-center cursor-pointer" data-type="zip">
+                                <i class="fas fa-file-archive text-3xl text-yellow-500 mb-2"></i>
+                                <p class="text-sm font-medium">Archive (ZIP)</p>
+                            </div>
+                            <div class="resource-type-card border-2 rounded-xl p-3 text-center cursor-pointer" data-type="image">
+                                <i class="fas fa-file-image text-3xl text-pink-500 mb-2"></i>
+                                <p class="text-sm font-medium">Image</p>
+                            </div>
+                            <div class="resource-type-card border-2 rounded-xl p-3 text-center cursor-pointer" data-type="presentation">
+                                <i class="fas fa-chalkboard-teacher text-3xl text-orange-500 mb-2"></i>
+                                <p class="text-sm font-medium">Presentation</p>
+                            </div>
+                            <div class="resource-type-card border-2 rounded-xl p-3 text-center cursor-pointer" data-type="other">
+                                <i class="fas fa-file text-3xl text-gray-500 mb-2"></i>
+                                <p class="text-sm font-medium">Other</p>
+                            </div>
+                        </div>
+                        <input type="hidden" id="resourceType" value="pdf">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Resource Title *</label>
+                        <input type="text" id="resourceTitle" required 
+                               placeholder="e.g., Course Syllabus, Lecture Notes, Assignment Guide"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                        <textarea id="resourceDescription" rows="2" 
+                                  placeholder="Brief description of this resource..."
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none"></textarea>
+                    </div>
+                    
+                    <div id="fileUploadSection" class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Upload File</label>
+                        <div id="dragDropArea" class="drag-area border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-[#1e88e5] transition">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-3"></i>
+                            <p class="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                            <p class="text-xs text-gray-500">PDF, DOC, DOCX, MP4, ZIP, JPG, PNG, PPT (Max 100MB)</p>
+                            <input type="file" id="resourceFile" class="hidden" accept=".pdf,.doc,.docx,.mp4,.zip,.jpg,.jpeg,.png,.ppt,.pptx">
+                        </div>
+                        <div id="filePreview" class="file-preview hidden mt-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-file text-2xl text-[#1e88e5]"></i>
+                                    <div>
+                                        <p id="fileName" class="text-sm font-medium text-gray-700"></p>
+                                        <p id="fileSize" class="text-xs text-gray-500"></p>
+                                    </div>
+                                </div>
+                                <button type="button" id="removeFileBtn" class="text-red-500 hover:text-red-700">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="urlSection" class="mb-4 hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Resource URL *</label>
+                        <input type="url" id="resourceUrl" 
+                               placeholder="https://example.com/resource"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    
+                    <div id="driveSection" class="mb-4 hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Google Drive File ID or Link</label>
+                        <input type="text" id="driveLink" 
+                               placeholder="https://drive.google.com/file/d/FILE_ID/view or FILE_ID"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                    </div>
+                    
+                    <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            <i id="resourceIconPreview" class="fas fa-file-pdf text-3xl text-red-500"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-700">Resource Preview</p>
+                                <p id="resourcePreviewText" class="text-xs text-gray-500">Selected resource will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-3 mt-6">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">
+                            <i class="fas fa-save mr-2"></i> Add Resource
+                        </button>
+                        <button type="button" id="cancelResourceModal" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="../js/admin/course-content.js"></script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Details - Digital Bridge Initiative Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e88e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+    <link rel="apple-touch-icon" href="/icon/icon-192x192.png">
+    <link rel="mask-icon" href="/icon/favicon.png" color="#1e88e5">
+
+    <!-- Additional PWA meta for better UX -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="DBI Learn">
+    <meta name="apple-mobile-web-app-title" content="DBI Learn">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%); overflow-x: hidden; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #1e88e5; border-radius: 10px; }
+        
+        .sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .sidebar-collapsed { width: 80px; }
+        .sidebar-expanded { width: 280px; }
+        
+        .nav-item { transition: all 0.2s ease; position: relative; overflow: hidden; }
+        .nav-item:hover { background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(0, 200, 83, 0.1) 100%); transform: translateX(5px); }
+        .nav-item.active { background: linear-gradient(135deg, #1e88e5 0%, #00c853 100%); color: white; }
+        .nav-item.active i { color: white; }
+        
+        .main-content { transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        
+        .info-card { transition: all 0.3s ease; }
+        .info-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        .activity-item { transition: all 0.2s ease; }
+        .activity-item:hover { background: #f9fafb; transform: translateX(5px); }
+        
+        .tooltip { position: relative; }
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 70px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 50;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; z-index: 1000; transform: translateX(-100%); }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
+        
+        .modal { animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .chart-container { position: relative; height: 250px; width: 100%; }
+        
+        .status-active { background: #d1fae5; color: #059669; }
+        .status-inactive { background: #fee2e2; color: #dc2626; }
+        .status-suspended { background: #fef3c7; color: #d97706; }
+    </style>
+</head>
+<body>
+
+<div id="mobileOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+
+<div class="flex min-h-screen relative">
+    
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="sidebar sidebar-expanded bg-white shadow-2xl fixed h-full z-50 flex flex-col" style="width: 280px;">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-3">
+                        <img src="../logo/DBI-Learn Logo.png" alt="DBI Learn Logo" width="180px">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-4 border-b border-gray-200">
+            <div class="flex items-center space-x-3">
+                <div class="relative">
+                    <img src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=40&name=Admin" id="adminAvatar" class="w-10 h-10 rounded-full border-2 border-[#1e88e5]">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-[#00c853] rounded-full border-2 border-white"></span>
+                </div>
+                <div class="admin-info">
+                    <p class="text-sm font-semibold text-gray-800" id="adminName">Loading...</p>
+                    <p class="text-xs text-gray-500" id="adminRole">Administrator</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="flex-1 overflow-y-auto py-6">
+            <div class="px-4 space-y-1">
+                <a href="dashboard.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-tachometer-alt w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Dashboard</span>
+                </a>
+                <a href="users.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-users w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Users</span>
+                </a>
+                <a href="courses.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-book w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Courses</span>
+                </a>
+                <a href="instructors.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-chalkboard-teacher w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Instructors</span>
+                </a>
+                <a href="analytics.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-chart-line w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Analytics</span>
+                </a>
+                <a href="certificate-generator.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-certificate w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Certificate Generator</span>
+                </a>
+                <a href="resources.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-download w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Resources</span>
+                </a>
+                <a href="reports.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-chart-line w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Reports</span>
+                </a>
+                <a href="engagement.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-comments w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Engagement</span>
+                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="pendingRepliesCount">0</span>
+                </a>
+                <a href="settings.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition">
+                    <i class="fas fa-cog w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Settings</span>
+                </a>
+            </div>
+            <div class="border-t border-gray-200 my-4"></div>
+            <div class="px-4 space-y-1">
+                <a href="support.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200">
+                    <i class="fas fa-headset w-5 h-5 text-gray-600"></i>
+                    <span class="text-sm font-medium nav-text">Support Tickets</span>
+                    <span class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full" id="openTicketsCount">0</span>
+                </a>
+                <a href="#" id="logoutBtn" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg transition text-red-600 hover:bg-red-50">
+                    <i class="fas fa-sign-out-alt w-5 h-5"></i>
+                    <span class="text-sm font-medium nav-text">Logout</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="p-4 border-t border-gray-200">
+            <div class="text-center">
+                <p class="text-xs text-gray-500 nav-text">Admin v4.0.0</p>
+                <p class="text-xs text-gray-400 nav-text mt-1">© 2026 DBI Learning</p>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main id="mainContent" class="main-content flex-1 min-h-screen" style="margin-left: 280px;">
+        
+        <header class="bg-white shadow-sm sticky top-0 z-30">
+            <div class="px-6 py-4 flex items-center justify-between">
+                <button id="mobileMenuBtn" class="md:hidden text-gray-600 hover:text-[#1e88e5]">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-user-graduate text-[#1e88e5] text-xl"></i>
+                    <h1 id="pageTitle" class="text-xl font-semibold text-gray-800">Student Details</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button id="notificationBtn" class="text-gray-600 hover:text-[#1e88e5] relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center" id="notificationCount">0</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <button id="adminMenuBtn" class="flex items-center space-x-2 focus:outline-none">
+                            <img src="https://ui-avatars.com/api/?background=1e88e5&color=fff&bold=true&size=32&name=Admin" id="dropdownAvatar" class="w-8 h-8 rounded-full">
+                            <i class="fas fa-chevron-down text-xs text-gray-500"></i>
+                        </button>
+                        <div id="adminDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                            <a href="profile.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fas fa-user mr-2"></i> My Profile</a>
+                            <a href="settings.html" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"><i class="fas fa-cog mr-2"></i> Settings</a>
+                            <hr><a href="#" id="logoutDropdown" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="p-6">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <i class="fas fa-spinner fa-spin text-4xl text-[#1e88e5] mb-4"></i>
+                <p class="text-gray-500">Loading student data...</p>
+            </div>
+            
+            <!-- Student Content -->
+            <div id="studentContent" class="hidden">
+                <!-- Student Header -->
+                <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
+                    <div class="bg-gradient-to-r from-[#1e88e5] to-[#00c853] h-24"></div>
+                    <div class="relative px-6 pb-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-end -mt-12 mb-4">
+                            <img id="studentAvatar" src="" class="w-24 h-24 rounded-full border-4 border-white shadow-lg bg-white">
+                            <div class="md:ml-6 mt-4 md:mt-0 flex-1">
+                                <h1 id="studentName" class="text-2xl font-bold text-gray-800">Loading...</h1>
+                                <div class="flex flex-wrap items-center gap-2 mt-1">
+                                    <span class="text-gray-500"><i class="fas fa-envelope mr-1"></i> <span id="studentEmail">-</span></span>
+                                    <span class="text-gray-300">•</span>
+                                    <span class="text-gray-500"><i class="fas fa-user-tag mr-1"></i> <span id="studentStatus" class="px-2 py-0.5 rounded-full text-xs"></span></span>
+                                    <span class="text-gray-300">•</span>
+                                    <span class="text-gray-500"><i class="fas fa-calendar-alt mr-1"></i> Joined <span id="joinDate">-</span></span>
+                                </div>
+                            </div>
+                            <div class="mt-4 md:mt-0 flex space-x-2">
+                                <button id="editStudentBtn" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                                    <i class="fas fa-edit mr-2"></i> Edit
+                                </button>
+                                <button id="suspendStudentBtn" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition">
+                                    <i class="fas fa-ban mr-2"></i> Suspend
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                    <div class="info-card bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">Courses Enrolled</p><p class="text-2xl font-bold text-gray-800" id="enrolledCount">0</p></div>
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center"><i class="fas fa-book-open text-[#1e88e5]"></i></div>
+                        </div>
+                    </div>
+                    <div class="info-card bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">Courses Completed</p><p class="text-2xl font-bold text-gray-800" id="completedCount">0</p></div>
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"><i class="fas fa-check-circle text-[#00c853]"></i></div>
+                        </div>
+                    </div>
+                    <div class="info-card bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">Total Learning Hours</p><p class="text-2xl font-bold text-gray-800" id="learningHours">0</p></div>
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center"><i class="fas fa-clock text-purple-600"></i></div>
+                        </div>
+                    </div>
+                    <div class="info-card bg-white rounded-xl shadow-sm p-4">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-gray-500 text-sm">Certificates Earned</p><p class="text-2xl font-bold text-gray-800" id="certificatesCount">0</p></div>
+                            <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center"><i class="fas fa-certificate text-orange-600"></i></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="mb-6 border-b border-gray-200">
+                    <div class="flex space-x-6 overflow-x-auto">
+                        <button class="tab-btn active pb-3 px-1 text-[#1e88e5] border-b-2 border-[#1e88e5] font-medium" data-tab="profile">Profile Details</button>
+                        <button class="tab-btn pb-3 px-1 text-gray-500 hover:text-gray-700 font-medium" data-tab="courses">Course Progress</button>
+                        <button class="tab-btn pb-3 px-1 text-gray-500 hover:text-gray-700 font-medium" data-tab="quizzes">Quiz Performance</button>
+                        <button class="tab-btn pb-3 px-1 text-gray-500 hover:text-gray-700 font-medium" data-tab="activity">Activity Log</button>
+                        <button class="tab-btn pb-3 px-1 text-gray-500 hover:text-gray-700 font-medium" data-tab="analytics">Analytics</button>
+                    </div>
+                </div>
+                
+                <!-- Profile Details Tab -->
+                <div id="profileTab" class="tab-content active">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Personal Information -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h2>
+                            <div class="space-y-3">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Full Name</span>
+                                    <span class="font-medium text-gray-800" id="detailFullName">-</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Username</span>
+                                    <span class="font-medium text-gray-800" id="detailUsername">-</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Email</span>
+                                    <span class="font-medium text-gray-800" id="detailEmail">-</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Phone</span>
+                                    <span class="font-medium text-gray-800" id="detailPhone">Not provided</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Gender</span>
+                                    <span class="font-medium text-gray-800" id="detailGender">Not specified</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Location</span>
+                                    <span class="font-medium text-gray-800" id="detailLocation">Not specified</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Education Information -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Education Information</h2>
+                            <div class="space-y-3">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">School/Institution</span>
+                                    <span class="font-medium text-gray-800" id="detailSchool">Not specified</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Grade/Level</span>
+                                    <span class="font-medium text-gray-800" id="detailGrade">Not specified</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Experience Level</span>
+                                    <span class="font-medium text-gray-800" id="detailExperience">Not specified</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Interests</span>
+                                    <span class="font-medium text-gray-800" id="detailInterests">Not specified</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">How they heard about us</span>
+                                    <span class="font-medium text-gray-800" id="detailReferral">Not specified</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Guardian Information -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Guardian Information</h2>
+                            <div class="space-y-3">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Guardian Name</span>
+                                    <span class="font-medium text-gray-800" id="detailGuardianName">Not provided</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Guardian Phone</span>
+                                    <span class="font-medium text-gray-800" id="detailGuardianPhone">Not provided</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Guardian Email</span>
+                                    <span class="font-medium text-gray-800" id="detailGuardianEmail">Not provided</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Consent Obtained</span>
+                                    <span class="font-medium text-gray-800" id="detailConsent">No</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Account Information -->
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Account Information</h2>
+                            <div class="space-y-3">
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Account Created</span>
+                                    <span class="font-medium text-gray-800" id="detailCreatedAt">-</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Last Login</span>
+                                    <span class="font-medium text-gray-800" id="detailLastLogin">Never</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Account Status</span>
+                                    <span class="font-medium" id="detailAccountStatus">-</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gray-100">
+                                    <span class="text-gray-500">Bio</span>
+                                    <span class="font-medium text-gray-800" id="detailBio">No bio added</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Course Progress Tab -->
+                <div id="coursesTab" class="tab-content hidden">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Course Enrollment & Progress</h2>
+                        <div id="coursesProgressList" class="space-y-4">
+                            <div class="skeleton h-24 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quiz Performance Tab -->
+                <div id="quizzesTab" class="tab-content hidden">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Quiz Attempts</h2>
+                        <div id="quizAttemptsList" class="space-y-4">
+                            <div class="skeleton h-24 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Log Tab -->
+                <div id="activityTab" class="tab-content hidden">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h2 class="text-lg font-semibold text-gray-800 mb-4">Activity Timeline</h2>
+                        <div id="activityLog" class="space-y-3">
+                            <div class="skeleton h-16 rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Analytics Tab -->
+                <div id="analyticsTab" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Learning Progress Over Time</h2>
+                            <div class="chart-container">
+                                <canvas id="progressChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Quiz Score Distribution</h2>
+                            <div class="chart-container">
+                                <canvas id="quizScoreChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6 lg:col-span-2">
+                            <h2 class="text-lg font-semibold text-gray-800 mb-4">Weekly Activity Heatmap</h2>
+                            <div id="heatmapContainer" class="overflow-x-auto">
+                                <div class="skeleton h-32 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Edit Student Modal -->
+<div id="editStudentModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    <div class="relative min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden modal">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-xl font-semibold text-gray-800">Edit Student</h2>
+                <button id="closeEditModal" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                <form id="editStudentForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                            <input type="text" id="editFullName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" id="editEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                            <input type="tel" id="editPhone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                            <input type="text" id="editLocation" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">School/Institution</label>
+                            <input type="text" id="editSchool" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Grade/Level</label>
+                            <select id="editGrade" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                                <option value="">Select grade</option>
+                                <option value="Basic 5">Basic 5</option>
+                                <option value="Basic 6">Basic 6</option>
+                                <option value="JHS 1">JHS 1</option>
+                                <option value="JHS 2">JHS 2</option>
+                                <option value="JHS 3">JHS 3</option>
+                                <option value="SHS 1">SHS 1</option>
+                                <option value="SHS 2">SHS 2</option>
+                                <option value="SHS 3">SHS 3</option>
+                                <option value="Tertiary">Tertiary</option>
+                                <option value="Adult Learner">Adult Learner</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+                        <textarea id="editBio" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select id="editStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#1e88e5] outline-none">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" class="flex-1 px-4 py-2 bg-[#1e88e5] text-white rounded-lg hover:bg-[#009e42] transition">Save Changes</button>
+                        <button type="button" id="cancelEditModal" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="../js/admin/student-details.js"></script>
+</body>
+</html>

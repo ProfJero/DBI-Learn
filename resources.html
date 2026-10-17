@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>Learning Resources - RTH E-Learning</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* Smooth transitions */
+        .sidebar-transition {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Mobile menu improvements */
+        @media (max-width: 767px) {
+            .main-content {
+                width: 100%;
+                overflow-x: hidden;
+            }
+            
+            button, a {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            .resource-card {
+                margin-bottom: 1rem;
+            }
+            
+            h1 {
+                font-size: clamp(1.5rem, 5vw, 2rem);
+            }
+            
+            .search-container {
+                width: 100%;
+                margin-bottom: 0.5rem;
+            }
+            
+            .nav-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+        
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .resource-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .category-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .resource-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .category-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        .skeleton-loader {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+        
+        /* Resource Card Styles */
+        .resource-card {
+            transition: all 0.3s ease;
+        }
+        
+        .resource-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .platform-badge {
+            transition: all 0.2s ease;
+        }
+        
+        .platform-badge:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Video Embed */
+        .video-embed {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+        }
+        
+        .video-embed iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Preview Modal */
+        .preview-content {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 antialiased">
+    <!-- Side Navigation Component -->
+    <div id="sidebar" class="fixed inset-y-0 left-0 bg-white shadow-2xl w-72 transform -translate-x-full md:translate-x-0 sidebar-transition z-30 flex flex-col overflow-y-auto">
+        <!-- Logo Area -->
+        <div class="h-20 flex items-center px-4 sm:px-6 border-b border-gray-100">
+            <a href="dashboard.html" class="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+                <div class="h-10 w-10 bg-gradient-to-r from-emerald-600 to-orange-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                    <span class="text-white font-bold text-xl">RTH</span>
+                </div>
+                <div class="min-w-0">
+                    <span class="text-xl font-bold block leading-tight truncate">
+                        <span class="text-emerald-600">RICHARD</span>
+                    </span>
+                    <span class="text-sm font-medium text-orange-500 block truncate">TECH HUB</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- User Profile Section -->
+        <div class="p-4 sm:p-5 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-orange-50">
+            <div class="flex items-center space-x-3">
+                <div class="h-12 w-12 rounded-xl bg-gradient-to-r from-emerald-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
+                    JS
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-emerald-600 font-medium">Welcome back,</p>
+                    <p class="text-sm font-bold text-gray-800 truncate" id="userName">Loading...</p>
+                    <p class="text-xs text-gray-500 flex items-center mt-0.5">
+                        <span class="h-1.5 w-1.5 bg-emerald-500 rounded-full mr-1 flex-shrink-0"></span>
+                        <span class="truncate" id="userRole">Student</span>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-3 gap-2 mt-4 pt-2 border-t border-gray-200">
+                <div class="text-center p-1">
+                    <p class="text-lg font-bold text-emerald-600" id="downloadCount">0</p>
+                    <p class="text-xs text-gray-500">Downloads</p>
+                </div>
+                <div class="text-center p-1">
+                    <p class="text-lg font-bold text-orange-500" id="favoriteCount">0</p>
+                    <p class="text-xs text-gray-500">Favorites</p>
+                </div>
+                <div class="text-center p-1">
+                    <p class="text-lg font-bold text-emerald-600" id="storageUsed">0</p>
+                    <p class="text-xs text-gray-500">Storage</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Navigation -->
+        <nav class="flex-1 overflow-y-auto py-4 sm:py-6 px-2 sm:px-4">
+            <div class="space-y-1">
+                <a href="dashboard.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all group hover:bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 truncate">Dashboard</span>
+                </a>
+
+                <a href="my-courses.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all group hover:bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 truncate">My Courses</span>
+                </a>
+
+                <a href="code-practice.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all group hover:bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 truncate">Code Practice</span>
+                </a>
+
+                <a href="assessments.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all group hover:bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 truncate">Assessments</span>
+                </a>
+
+                <a href="resources.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 font-semibold text-emerald-600 truncate">Learning Resources</span>
+                </a>
+
+                <a href="announcements.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all group hover:bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 truncate">Announcements</span>
+                </a>
+
+                <a href="achievements.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all group hover:bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 truncate">Achievements</span>
+                </a>
+
+                <div class="border-t border-gray-100 my-4"></div>
+
+                <a href="profile.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all group hover:bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 truncate">My Profile</span>
+                </a>
+
+                <a href="help.html" class="nav-item flex items-center px-3 sm:px-4 py-3 sm:py-3.5 text-sm font-medium rounded-xl transition-all group hover:bg-emerald-50">
+                    <div class="nav-icon w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-emerald-100 transition-colors flex-shrink-0">
+                        <svg class="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 group-hover:text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="flex-1 truncate">Help & Support</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Logout Button -->
+        <div class="p-3 sm:p-4 border-t border-gray-100 bg-white sticky bottom-0">
+            <button id="sidebarLogoutBtn" class="flex items-center w-full px-3 sm:px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all group">
+                <div class="w-9 h-9 sm:w-10 sm:h-10 bg-red-50 rounded-lg flex items-center justify-center mr-3 group-hover:bg-red-100 transition-colors flex-shrink-0">
+                    <svg class="h-4 w-4 sm:h-5 sm:w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                </div>
+                <span class="flex-1 text-left truncate">Logout</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Button -->
+    <button id="mobileMenuBtn" class="fixed top-4 left-4 z-40 md:hidden bg-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95" aria-label="Toggle menu">
+        <svg class="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+
+    <!-- Overlay for mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Main Content -->
+    <div class="main-content min-h-screen md:ml-72">
+        <!-- Top Navigation Bar -->
+        <nav class="sticky-nav bg-white shadow-sm">
+            <div class="nav-header flex flex-col sm:flex-row sm:justify-between sm:items-center h-auto sm:h-20 px-4 sm:px-6 lg:px-8 py-4 sm:py-0 space-y-4 sm:space-y-0">
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Learning Resources</h1>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-1">Access course materials, documents, and external resources</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
+                    <div class="relative flex-1 sm:flex-none search-container">
+                        <input type="text" id="searchInput" placeholder="Search resources..." 
+                            class="w-full sm:w-64 pl-10 pr-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm">
+                        <svg class="h-5 w-5 text-gray-400 absolute left-3 top-3 sm:top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <button id="notificationBtn" class="p-2.5 sm:p-2 text-gray-400 hover:text-emerald-600 transition-colors bg-gray-50 sm:bg-transparent rounded-lg sm:rounded-full flex items-center justify-center">
+                        <svg class="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <span id="notificationCount" class="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Resources Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            <!-- Filters Row -->
+            <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                <div class="flex flex-wrap gap-2">
+                    <button class="category-filter active px-4 py-2 rounded-lg text-sm font-medium bg-[#1e88e5] text-white" data-category="all">All Resources</button>
+                    <button class="category-filter px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-category="documents">Documents</button>
+                    <button class="category-filter px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-category="videos">Videos</button>
+                    <button class="category-filter px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-category="code">Code Samples</button>
+                    <button class="category-filter px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-category="external">External Links</button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="sortBy" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500">
+                        <option value="latest">Latest First</option>
+                        <option value="popular">Most Popular</option>
+                        <option value="title">Title A-Z</option>
+                    </select>
+                    <div class="flex rounded-lg border border-gray-200 overflow-hidden">
+                        <button id="gridViewBtn" class="p-2 bg-[#1e88e5] text-white"><i class="fas fa-th"></i></button>
+                        <button id="listViewBtn" class="p-2 bg-gray-100 text-gray-600"><i class="fas fa-list"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid View -->
+            <div id="gridView" class="resource-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="skeleton-loader h-80 rounded-xl"></div>
+            </div>
+
+            <!-- List View -->
+            <div id="listView" class="hidden space-y-3">
+                <div id="listViewContainer"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-12">
+                <i class="fas fa-folder-open text-5xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500">No resources found</p>
+                <p class="text-sm text-gray-400 mt-1">Try adjusting your search or filters</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resource Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                    <h2 id="previewTitle" class="text-xl font-semibold text-gray-800">Resource Preview</h2>
+                    <button id="closePreviewBtn" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="previewContent" class="p-6 overflow-y-auto max-h-[calc(90vh-100px)]">
+                    <!-- Content loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mobile menu script
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            function toggleSidebar() {
+                const isOpen = !sidebar.classList.contains('-translate-x-full');
+                if (isOpen) {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+            
+            mobileMenuBtn?.addEventListener('click', toggleSidebar);
+            overlay?.addEventListener('click', toggleSidebar);
+            
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 768) {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.add('hidden');
+                    document.body.style.overflow = '';
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+        });
+    </script>
+
+    <script type="module" src="../js/student/resources.js"></script>
+</body>
+</html>

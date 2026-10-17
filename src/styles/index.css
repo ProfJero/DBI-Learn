@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  ::selection {
+    @apply bg-brand-200 text-ink-900;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-ink-950;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-500 via-brand-500 to-sky-600 bg-clip-text text-transparent;
+  }
+  .container-page {
+    @apply mx-auto max-w-7xl px-4 sm:px-6;
+  }
+  /* Lesson typography */
+  .lesson-prose {
+    @apply prose prose-slate max-w-none dark:prose-invert prose-headings:scroll-mt-24 prose-headings:font-bold prose-headings:tracking-tight
+      prose-a:text-sky-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-inherit
+      prose-code:rounded prose-code:bg-ink-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:font-mono prose-code:text-[0.85em] prose-code:font-medium prose-code:before:content-none prose-code:after:content-none
+      dark:prose-code:bg-ink-800 prose-pre:rounded-xl prose-pre:bg-[#0d1117] prose-pre:p-0 prose-img:rounded-xl prose-table:text-sm prose-th:bg-ink-50 dark:prose-th:bg-ink-800 prose-th:px-3 prose-td:px-3;
+  }
+  .lesson-prose pre code {
+    @apply block overflow-x-auto bg-transparent p-4 text-[13px] leading-relaxed text-ink-100;
+  }
+}
+
+/* highlight.js — GitHub dark palette */
+.hljs-comment, .hljs-quote { color: #8b949e; font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-type { color: #ff7b72; }
+.hljs-string, .hljs-attr, .hljs-regexp { color: #a5d6ff; }
+.hljs-number, .hljs-built_in, .hljs-symbol { color: #79c0ff; }
+.hljs-title, .hljs-section, .hljs-function .hljs-title { color: #d2a8ff; }
+.hljs-name, .hljs-tag, .hljs-selector-class, .hljs-selector-id { color: #7ee787; }
+.hljs-attribute, .hljs-variable, .hljs-template-variable, .hljs-property { color: #ffa657; }
+.hljs-meta { color: #79c0ff; }
+
+@media print {
+  body * { visibility: hidden; }
+  .print-area, .print-area * { visibility: visible; }
+  .print-area { position: absolute; inset: 0; }
+}

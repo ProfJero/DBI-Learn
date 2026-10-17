@@ -1,0 +1,45 @@
+# Learning tracks. `signatory` is the head of department who co-signs certificates for the track.
+# Names come from the previous certificate generator — update them in Studio → Platform settings.
+- slug: digital-skills
+  name: Digital Skills
+  description: Everyday computer, internet and productivity skills for school, work and life.
+  color: "#03c14b"
+- slug: software-development
+  name: Software Development
+  description: Learn to build websites, apps and programs with real code.
+  color: "#0b7be8"
+  signatory:
+    name: Benjamin Amoako
+    title: Head of Software Development
+    signature_url: /images/signatures/head-software.png
+- slug: data-analysis
+  name: Data Analysis
+  description: Turn numbers into insight with spreadsheets, charts and analysis.
+  color: "#0d9488"
+  signatory:
+    name: Godsway Arhin
+    title: Head of Data Analysis
+    signature_url: /images/signatures/head-data.png
+- slug: graphics-multimedia
+  name: Graphics & Multimedia
+  description: Design eye-catching graphics, posters and social media content.
+  color: "#e11d48"
+  signatory:
+    name: Abel Eduah
+    title: Head of Graphics & Multimedia
+- slug: cybersecurity
+  name: Cybersecurity
+  description: Protect yourself, your family and your organisation online.
+  color: "#334155"
+- slug: digital-marketing
+  name: Digital Marketing
+  description: Grow a brand, business or cause using social media and the web.
+  color: "#f97316"
+- slug: network-cloud
+  name: Networking & Cloud
+  description: Understand how networks, the internet and cloud services work.
+  color: "#0891b2"
+- slug: artificial-intelligence
+  name: Artificial Intelligence
+  description: Understand AI and use it responsibly to learn and create.
+  color: "#7c3aed"

@@ -1,0 +1,91 @@
+# Free, reputable resources shown in the Resource library.
+- title: MDN Web Docs
+  url: https://developer.mozilla.org/en-US/docs/Learn
+  description: The definitive free guide to HTML, CSS and JavaScript, maintained by Mozilla.
+  category: Web development
+  kind: article
+- title: W3Schools
+  url: https://www.w3schools.com/
+  description: Beginner-friendly tutorials with a "Try it yourself" editor for web languages.
+  category: Web development
+  kind: tool
+- title: freeCodeCamp
+  url: https://www.freecodecamp.org/learn
+  description: Thousands of free interactive coding lessons and certifications.
+  category: Web development
+  kind: link
+- title: CodePen
+  url: https://codepen.io/pen/
+  description: Write HTML, CSS and JavaScript in your browser and see the result instantly.
+  category: Web development
+  kind: tool
+- title: Python.org Beginner's Guide
+  url: https://wiki.python.org/moin/BeginnersGuide
+  description: Official starting point for learning Python, with links to tutorials and installers.
+  category: Programming
+  kind: article
+- title: Online Python editor (Programiz)
+  url: https://www.programiz.com/python-programming/online-compiler/
+  description: Run Python code in your browser — no installation required.
+  category: Programming
+  kind: tool
+- title: Khan Academy — Computing
+  url: https://www.khanacademy.org/computing
+  description: Free videos and exercises on programming, computer science and the internet.
+  category: Programming
+  kind: video
+- title: Microsoft Excel help & learning
+  url: https://support.microsoft.com/en-us/excel
+  description: Official Excel training videos, functions reference and how-to guides.
+  category: Data & spreadsheets
+  kind: article
+- title: Google Sheets training
+  url: https://support.google.com/a/users/answer/9282959
+  description: Free cheat sheets and guides for Google Sheets.
+  category: Data & spreadsheets
+  kind: article
+- title: Canva Design School
+  url: https://www.canva.com/designschool/
+  description: Free courses and tutorials on graphic design fundamentals using Canva.
+  category: Design
+  kind: video
+- title: Canva
+  url: https://www.canva.com/
+  description: Free online design tool for posters, flyers, social media graphics and presentations.
+  category: Design
+  kind: tool
+- title: Coolors colour palette generator
+  url: https://coolors.co/
+  description: Generate and explore colour palettes for your designs.
+  category: Design
+  kind: tool
+- title: Google Digital Garage — Fundamentals of Digital Marketing
+  url: https://learndigital.withgoogle.com/digitalgarage
+  description: Free digital-marketing training from Google.
+  category: Digital marketing
+  kind: link
+- title: Have I Been Pwned
+  url: https://haveibeenpwned.com/
+  description: Check whether your email address has appeared in a known data breach.
+  category: Online safety
+  kind: tool
+- title: Google Safety Center
+  url: https://safety.google/
+  description: Practical advice for protecting your accounts, devices and family online.
+  category: Online safety
+  kind: article
+- title: Cisco Networking Academy
+  url: https://www.netacad.com/
+  description: Free introductory courses on networking, cybersecurity and IT.
+  category: Networking & cloud
+  kind: link
+- title: Elements of AI
+  url: https://www.elementsofai.com/
+  description: A free online course for anyone who wants to understand what AI is and how it works.
+  category: Artificial intelligence
+  kind: link
+- title: Typing practice (Typing.com)
+  url: https://www.typing.com/
+  description: Free lessons and games to improve your typing speed and accuracy.
+  category: Digital skills
+  kind: tool

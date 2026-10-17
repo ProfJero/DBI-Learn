@@ -364,7 +364,7 @@ export class MockSupabase {
   }
 }
 
-export function questionAnswerTexts(promptText: string) {
+export function questionAnswerTexts(promptText: string): { kind: string; texts: string[] } {
   const plain = (s: string) => s.replace(/[`*_>#]/g, '').replace(/\s+/g, ' ').trim();
   const target = plain(promptText);
   for (const c of fixtures.courses) {

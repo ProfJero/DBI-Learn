@@ -20,6 +20,8 @@ import {
   UserPlus,
   Users,
   Library,
+  MessageCircleQuestion,
+  Code2,
 } from 'lucide-react';
 import { RedirectIfSignedIn, RequireAuth, RequireRole } from './auth/guards';
 import { useAuth } from './auth/AuthProvider';
@@ -66,6 +68,10 @@ const Ticket = p(() => import('./pages/app/Support'), 'Ticket');
 const Profile = p(() => import('./pages/app/Profile'), 'Profile');
 const SettingsPage = p(() => import('./pages/app/Settings'), 'SettingsPage');
 const Resources = p(() => import('./pages/app/Resources'), 'Resources');
+const Practice = p(() => import('./pages/app/Practice'), 'Practice');
+const CodeLab = p(() => import('./features/codelab/CodeLab'), 'CodeLab');
+const MyQuestions = p(() => import('./pages/app/Questions'), 'MyQuestions');
+const QuestionPage = p(() => import('./pages/app/Questions'), 'QuestionPage');
 
 // Studio
 const Overview = p(() => import('./pages/studio/Overview'), 'Overview');
@@ -84,6 +90,8 @@ const Inquiries = p(() => import('./pages/studio/SupportInbox'), 'Inquiries');
 const PlatformSettings = p(() => import('./pages/studio/PlatformSettings'), 'PlatformSettings');
 const AuditLog = p(() => import('./pages/studio/PlatformSettings'), 'AuditLog');
 const StudioResources = p(() => import('./pages/studio/Resources'), 'StudioResources');
+const QuestionsInbox = p(() => import('./pages/studio/Questions'), 'QuestionsInbox');
+const StudioQuestion = p(() => import('./pages/studio/Questions'), 'StudioQuestion');
 
 const studentNav: NavGroup[] = [
   {
@@ -92,12 +100,14 @@ const studentNav: NavGroup[] = [
       { to: '/app/catalog', label: 'Explore', icon: Compass, mobile: true },
       { to: '/app/courses', label: 'My learning', icon: BookOpen, mobile: true },
       { to: '/app/downloads', label: 'Downloads', icon: Download, mobile: true },
-      { to: '/app/achievements', label: 'Achievements', icon: Trophy, mobile: true },
+      { to: '/app/practice', label: 'Practice Lab', icon: Code2, mobile: true },
+      { to: '/app/achievements', label: 'Achievements', icon: Trophy },
     ],
   },
   {
     title: 'Community',
     items: [
+      { to: '/app/questions', label: 'Ask a teacher', icon: MessageCircleQuestion },
       { to: '/app/discussions', label: 'Discussions', icon: MessagesSquare },
       { to: '/app/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/app/resources', label: 'Resource library', icon: Library },
@@ -117,15 +127,19 @@ function StudioShell() {
   const { profile } = useAuth();
   const admin = isAdminRole(profile?.role);
   const { data: counts } = useQuery({
-    queryKey: ['studio-counts'],
-    enabled: admin,
+    queryKey: ['studio-counts', profile?.id],
+    enabled: !!profile,
     refetchInterval: 120_000,
     queryFn: async () => {
-      const [t, a] = await Promise.all([
-        supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-        supabase.from('instructor_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      const questions = admin
+        ? supabase.from('course_questions').select('id', { count: 'exact', head: true }).eq('status', 'open')
+        : supabase.from('course_questions').select('id, course:courses!inner(instructor_id)', { count: 'exact', head: true }).eq('status', 'open').eq('course.instructor_id', profile!.id);
+      const [t, a, q] = await Promise.all([
+        admin ? supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open') : null,
+        admin ? supabase.from('instructor_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending') : null,
+        questions,
       ]);
-      return { tickets: t.count ?? 0, applications: a.count ?? 0 };
+      return { tickets: t?.count ?? 0, applications: a?.count ?? 0, questions: q.count ?? 0 };
     },
   });
   const groups: NavGroup[] = [
@@ -133,6 +147,7 @@ function StudioShell() {
       items: [
         { to: '/admin', label: 'Overview', icon: LayoutDashboard, end: true },
         { to: '/admin/courses', label: 'Courses', icon: BookOpen },
+        { to: '/admin/questions', label: 'Learner questions', icon: MessageCircleQuestion, badge: counts?.questions },
         { to: '/admin/learners', label: 'Learners', icon: GraduationCap },
         { to: '/admin/reports', label: 'Reports', icon: BarChart3 },
         { to: '/admin/announcements', label: 'Announcements', icon: Megaphone },
@@ -190,6 +205,8 @@ export function App() {
 
         <Route element={<RequireAuth />}>
           <Route path="app/learn/:slug/*" element={<Player />} />
+          <Route path="app/practice/code" element={<CodeLab />} />
+          <Route path="app/practice/challenge/:id" element={<CodeLab />} />
           <Route path="app" element={<Shell groups={studentNav} mode="student" />}>
             <Route index element={<Dashboard />} />
             <Route path="catalog" element={<AppCatalog />} />
@@ -203,6 +220,9 @@ export function App() {
             <Route path="downloads" element={<Downloads />} />
             <Route path="announcements" element={<Announcements />} />
             <Route path="resources" element={<Resources />} />
+            <Route path="practice" element={<Practice />} />
+            <Route path="questions" element={<MyQuestions />} />
+            <Route path="questions/:id" element={<QuestionPage />} />
             <Route path="support" element={<Support />} />
             <Route path="support/:id" element={<Ticket />} />
             <Route path="profile" element={<Profile />} />
@@ -219,6 +239,8 @@ export function App() {
               <Route path="reports" element={<Reports />} />
               <Route path="announcements" element={<StudioAnnouncements />} />
               <Route path="resources" element={<StudioResources />} />
+              <Route path="questions" element={<QuestionsInbox />} />
+              <Route path="questions/:id" element={<StudioQuestion />} />
               <Route element={<RequireRole roles={['super_admin', 'admin']} />}>
                 <Route path="staff" element={<Staff />} />
                 <Route path="applications" element={<Applications />} />

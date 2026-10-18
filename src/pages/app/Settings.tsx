@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { KeyRound, LogOut, Moon, Target, Trash2, User } from 'lucide-react';
+import { Accessibility, KeyRound, LogOut, Moon, Target, Trash2, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { clear, createStore } from 'idb-keyval';
 import { useAuth } from '@/auth/AuthProvider';
@@ -9,6 +9,9 @@ import { Button, Card, Field, Input, Select } from '@/components/ui';
 import { useTheme } from '@/components/layout/Brand';
 import { PasswordStrength, passwordScore } from '@/pages/public/Auth';
 import { PageHeader } from '@/components/ui';
+import { setPrefs, usePrefs, type Prefs } from '@/lib/a11y';
+import { ReadAloud } from '@/components/learn/ReadAloud';
+import { cn } from '@/lib/utils';
 
 function Section({ id, icon, title, children }: { id?: string; icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
@@ -52,6 +55,8 @@ export function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader title="Settings" />
+
+      <AccessibilitySection />
 
       <Section icon={<User className="h-5 w-5 text-brand-500" />} title="Account details">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -218,5 +223,78 @@ export function SettingsPage() {
         </div>
       </Section>
     </div>
+  );
+}
+
+function Toggle({ label, hint, checked, onChange }: { label: string; hint: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-start justify-between gap-4 py-3">
+      <span>
+        <span className="block text-sm font-semibold">{label}</span>
+        <span className="block text-sm text-ink-500">{hint}</span>
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={cn('relative mt-1 h-7 w-12 shrink-0 rounded-full transition', checked ? 'bg-brand-500' : 'bg-ink-200 dark:bg-ink-700')}
+      >
+        <span className={cn('absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-all', checked ? 'left-[22px]' : 'left-0.5')} />
+      </button>
+    </label>
+  );
+}
+
+function AccessibilitySection() {
+  const prefs = usePrefs();
+  const sizes: { v: Prefs['textSize']; label: string; px: string }[] = [
+    { v: 'normal', label: 'Normal', px: 'text-base' },
+    { v: 'large', label: 'Large', px: 'text-lg' },
+    { v: 'xlarge', label: 'Extra large', px: 'text-xl' },
+  ];
+  return (
+    <Section id="accessibility" icon={<Accessibility className="h-5 w-5 text-brand-500" />} title="Reading & accessibility">
+      <p className="mb-2 text-sm font-semibold">Text size</p>
+      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Text size">
+        {sizes.map((s) => (
+          <button
+            key={s.v}
+            role="radio"
+            aria-checked={prefs.textSize === s.v}
+            onClick={() => setPrefs({ textSize: s.v })}
+            className={cn(
+              'rounded-xl border-2 py-3 font-semibold transition',
+              s.px,
+              prefs.textSize === s.v ? 'border-brand-500 bg-brand-50 text-brand-800 dark:bg-brand-950/40 dark:text-brand-200' : 'border-ink-100 dark:border-ink-800',
+            )}
+          >
+            Aa <span className="block text-xs font-medium text-ink-500">{s.label}</span>
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 divide-y divide-ink-100 dark:divide-ink-800">
+        <Toggle label="Easy-read font" hint="A clearer font designed for people who find reading hard." checked={prefs.easyFont} onChange={(v) => setPrefs({ easyFont: v })} />
+        <Toggle label="Reduce motion" hint="Turn off animations and moving effects." checked={prefs.reduceMotion} onChange={(v) => setPrefs({ reduceMotion: v })} />
+        <Toggle label="Data saver" hint="Pictures load only when you tap them and videos don't preload. Good for small data bundles." checked={prefs.dataSaver} onChange={(v) => setPrefs({ dataSaver: v })} />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-ink-100 pt-4 dark:border-ink-800">
+        <label htmlFor="read-rate" className="text-sm font-semibold">
+          Read-aloud speed
+        </label>
+        <select
+          id="read-rate"
+          value={prefs.readRate}
+          onChange={(e) => setPrefs({ readRate: Number(e.target.value) })}
+          className="h-10 rounded-xl border border-ink-200 bg-white px-3 text-sm dark:border-ink-700 dark:bg-ink-900"
+        >
+          <option value={0.75}>Slow</option>
+          <option value={1}>Normal</option>
+          <option value={1.25}>Fast</option>
+        </select>
+        <ReadAloud text="Hello! This is how lessons sound when you press Listen. Akwaaba to DBI Learn." />
+      </div>
+    </Section>
   );
 }

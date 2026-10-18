@@ -18,10 +18,12 @@ import {
   ExternalLink,
   Archive,
   CheckCircle2,
+  ImagePlus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/auth/AuthProvider';
 import { supabase, must } from '@/lib/supabase';
+import { uploadImage } from '@/lib/media';
 import { COURSE_SELECT } from '@/lib/offline/packages';
 import { useCategories } from '@/hooks/queries';
 import type { Course, Lesson, Module, Question, QuestionKind, Quiz } from '@/lib/types';
@@ -213,11 +215,14 @@ function DetailsTab({ course, admin }: { course: Course; admin: boolean }) {
 
   async function uploadCover(file: File) {
     setUploading(true);
-    const path = `covers/${course.id}-${Date.now()}.${file.name.split('.').pop()}`;
-    const { error } = await supabase.storage.from('course-media').upload(path, file, { upsert: true, contentType: file.type });
-    setUploading(false);
-    if (error) return toast.error(error.message);
-    setF((x) => ({ ...x, cover_url: supabase.storage.from('course-media').getPublicUrl(path).data.publicUrl }));
+    try {
+      const url = await uploadImage(file, 'cover');
+      setF((x) => ({ ...x, cover_url: url }));
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -578,12 +583,41 @@ function LessonModal({ value, modules, onClose, onSaved }: { value: Partial<Less
             <Input id="l-video" value={f.video_url ?? ''} onChange={(e) => setF({ ...f, video_url: e.target.value, kind: e.target.value ? 'video' : 'article' })} placeholder="https://youtu.be/…" />
           </Field>
           <Field label={`Lesson content (Markdown) · ${words} words`} htmlFor="l-content" hint={<pre className="whitespace-pre-wrap font-mono text-[11px]">{MD_HELP}</pre>}>
+            <InsertImage onInsert={(md) => setF((x) => ({ ...x, content: `${x.content ?? ''}\n\n${md}\n` }))} />
             <Textarea id="l-content" rows={18} className="font-mono text-[13px]" value={f.content ?? ''} onChange={(e) => setF({ ...f, content: e.target.value })} />
           </Field>
           <Checkbox checked={!!f.is_preview} onChange={(e) => setF({ ...f, is_preview: e.target.checked })} label="Free preview — visible to visitors without an account" />
         </div>
       )}
     </Modal>
+  );
+}
+
+function InsertImage({ onInsert }: { onInsert: (markdown: string) => void }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <label className="mb-2 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-ink-200 px-3 py-1.5 text-xs font-semibold hover:bg-ink-50 dark:border-ink-700 dark:hover:bg-ink-800">
+      <ImagePlus className="h-4 w-4" /> {busy ? 'Uploading…' : 'Insert image'}
+      <input
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (!file) return;
+          setBusy(true);
+          try {
+            const url = await uploadImage(file, 'lesson');
+            onInsert(`![${file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ')}](${url})`);
+          } catch (err) {
+            toast.error((err as Error).message);
+          } finally {
+            setBusy(false);
+          }
+        }}
+      />
+    </label>
   );
 }
 

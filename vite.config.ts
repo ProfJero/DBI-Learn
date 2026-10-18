@@ -42,12 +42,31 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2,svg,png,ico,webp}'],
-        globIgnores: ['**/screenshot-*', '**/hero-learners.webp', '**/logo-full.png', '**/emblem-512.png', '**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2'],
+        // Prettier and the SQLite engine are only fetched when a learner first uses them (then cached below).
+        globIgnores: ['**/fmt-*.js', '**/lab-*.js', '**/*.wasm', '**/screenshot-*', '**/hero-learners.webp', '**/logo-full.png', '**/emblem-512.png', '**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/google[0-9a-f]+\.html$/],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            // Hashed build files that are not precached (formatter, SQLite wasm, language packs).
+            urlPattern: ({ url, sameOrigin }) => sameOrigin && url.pathname.startsWith('/assets/'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'dbi-lazy-assets', expiration: { maxEntries: 120 }, cacheableResponse: { statuses: [200] } },
+          },
+          {
+            // Python (Pyodide) — downloaded once, then works offline.
+            urlPattern: ({ url }) => url.hostname === 'cdn.jsdelivr.net' && url.pathname.startsWith('/npm/pyodide@'),
+            handler: 'CacheFirst',
+            options: { cacheName: 'dbi-pyodide', expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 180 }, cacheableResponse: { statuses: [0, 200] } },
+          },
+          {
+            // Cloudinary images (avatars, covers, lesson pictures).
+            urlPattern: ({ url }) => url.hostname === 'res.cloudinary.com',
+            handler: 'CacheFirst',
+            options: { cacheName: 'dbi-cloudinary', expiration: { maxEntries: 400, maxAgeSeconds: 60 * 60 * 24 * 60 }, cacheableResponse: { statuses: [0, 200] } },
+          },
           {
             // Course media & avatars from Supabase Storage (public buckets)
             urlPattern: ({ url }) => url.hostname.endsWith('.supabase.co') && url.pathname.startsWith('/storage/v1/object/public/'),
@@ -73,12 +92,16 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          supabase: ['@supabase/supabase-js'],
-          markdown: ['react-markdown', 'remark-gfm', 'rehype-highlight'],
-          charts: ['recharts'],
-          pdf: ['jspdf', 'html-to-image', 'qrcode'],
+        manualChunks(id: string) {
+          if (!id.includes('node_modules')) return undefined;
+          if (/[\\/]prettier[\\/]/.test(id)) return 'fmt-prettier';
+          if (/[\\/](@codemirror|@lezer|codemirror|@emmetio|emmet|@replit|style-mod|w3c-keyname|crelt)[\\/]/.test(id)) return 'lab-editor';
+          if (/[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return 'react';
+          if (/[\\/]@supabase[\\/]/.test(id)) return 'supabase';
+          if (/[\\/](react-markdown|remark-|rehype-|highlight\.js|micromark|mdast|hast|unified|unist)/.test(id)) return 'markdown';
+          if (/[\\/](recharts|d3-|victory)/.test(id)) return 'charts';
+          if (/[\\/](jspdf|html-to-image|qrcode)[\\/]/.test(id)) return 'pdf';
+          return undefined;
         },
       },
     },

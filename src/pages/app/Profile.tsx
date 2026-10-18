@@ -3,6 +3,7 @@ import { Camera, Award, Flame, Zap, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/auth/AuthProvider';
 import { supabase, friendlyError } from '@/lib/supabase';
+import { uploadImage } from '@/lib/media';
 import { useMyBadges, useBadges, useMyCertificates, useMyEnrollments } from '@/hooks/queries';
 import { Avatar, Badge, Button, Card, Field, Input, PageHeader, Textarea } from '@/components/ui';
 import { formatDate, levelFromXp, ROLE_LABEL } from '@/lib/utils';
@@ -40,15 +41,10 @@ export function Profile() {
   }
 
   async function upload(file: File) {
-    if (file.size > 2 * 1024 * 1024) return toast.error('Please choose an image under 2 MB.');
     setUploading(true);
     try {
-      const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
-      const path = `${session!.user.id}/avatar-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('avatars').upload(path, file, { upsert: true, contentType: file.type });
-      if (error) throw error;
-      const { data } = supabase.storage.from('avatars').getPublicUrl(path);
-      const { error: e2 } = await supabase.from('profiles').update({ avatar_url: data.publicUrl }).eq('id', profile!.id);
+      const url = await uploadImage(file, 'avatar', session!.user.id);
+      const { error: e2 } = await supabase.from('profiles').update({ avatar_url: url }).eq('id', profile!.id);
       if (e2) throw e2;
       await refreshProfile();
       toast.success('Photo updated');

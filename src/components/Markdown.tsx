@@ -1,9 +1,14 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
-import { Lightbulb, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { Lightbulb, AlertTriangle, Info, CheckCircle2, Play } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { ImageIcon } from 'lucide-react';
+import { dataSaverOn } from '@/lib/a11y';
 import { cn } from '@/lib/utils';
+import { img } from '@/lib/media';
+import { tryItLink } from '@/features/codelab/tryit';
 
 const CALLOUTS: Record<string, { icon: ReactNode; cls: string; label: string }> = {
   TIP: { icon: <Lightbulb className="h-4 w-4" />, cls: 'border-brand-300 bg-brand-50 text-brand-900 dark:border-brand-800 dark:bg-brand-950/50 dark:text-brand-100', label: 'Tip' },
@@ -24,8 +29,22 @@ export function splitCalloutMarkers(md: string) {
   return md.replace(/^(>[ \t]?\[!(?:TIP|NOTE|WARNING|TRY)\])[ \t]*\n(?=>[ \t]*\S)/gm, '$1\n>\n');
 }
 
+/** In data-saver mode pictures load only when tapped. */
+function LessonImage({ src, alt }: { src?: string; alt: string }) {
+  const [show, setShow] = useState(() => !dataSaverOn());
+  if (!src) return null;
+  if (!show)
+    return (
+      <button type="button" onClick={() => setShow(true)} className="not-prose my-3 flex w-full items-center gap-2 rounded-xl border border-dashed border-ink-200 p-4 text-left text-sm text-ink-500 dark:border-ink-700">
+        <ImageIcon className="h-5 w-5 shrink-0" /> Tap to load picture{alt ? `: ${alt}` : ''}
+      </button>
+    );
+  return <img src={img(src, 900)} alt={alt} loading="lazy" />;
+}
+
 /** Renders lesson markdown with GFM tables, syntax highlighting and `> [!TIP]` style callouts. */
-export function Markdown({ children, className }: { children: string; className?: string }) {
+/** With `tryIt`, runnable code blocks get a button that opens them in the Code Lab. */
+export function Markdown({ children, className, tryIt }: { children: string; className?: string; tryIt?: boolean }) {
   return (
     <div className={cn('lesson-prose', className)}>
       <ReactMarkdown
@@ -37,7 +56,7 @@ export function Markdown({ children, className }: { children: string; className?
               {children}
             </a>
           ),
-          img: ({ src, alt }) => <img src={typeof src === 'string' ? src : undefined} alt={alt ?? ''} loading="lazy" />,
+          img: ({ src, alt }) => <LessonImage src={typeof src === 'string' ? src : undefined} alt={alt ?? ''} />,
           blockquote: ({ children }) => {
             const text = textOf(children).trim();
             const m = text.match(/^\[!(TIP|NOTE|WARNING|TRY)\]/);
@@ -50,6 +69,25 @@ export function Markdown({ children, className }: { children: string; className?
                   {c.label}
                 </p>
                 <div className="[&_p]:my-1 [&_code]:rounded [&_code]:bg-black/5 [&_code]:px-1 [&_code]:font-mono [&_code]:text-[0.85em] [&>p:first-child]:hidden">{children}</div>
+              </div>
+            );
+          },
+          pre: ({ children }) => {
+            const code = Array.isArray(children) ? children[0] : children;
+            const cls = (code as { props?: { className?: string } } | undefined)?.props?.className ?? '';
+            const lang = cls.match(/language-([\w-]+)/)?.[1];
+            const link = tryIt && lang ? tryItLink(lang, textOf(children).replace(/\n$/, '')) : null;
+            if (!link) return <pre>{children}</pre>;
+            return (
+              <div className="relative">
+                <pre>{children}</pre>
+                <Link
+                  to={link.to}
+                  state={link.state}
+                  className="not-prose absolute right-2 top-2 inline-flex items-center gap-1 rounded-lg bg-brand-500 px-2.5 py-1 text-xs font-bold text-white shadow hover:bg-brand-600"
+                >
+                  <Play className="h-3 w-3 fill-current" /> Try it
+                </Link>
               </div>
             );
           },

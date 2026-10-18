@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Award, BookOpen, Flame, Megaphone, Sparkles, Target, Trophy, Zap, KeyRound } from 'lucide-react';
+import { ArrowRight, Award, BookOpen, Code2, Flame, Megaphone, MessageCircleQuestion, Sparkles, Target, Trophy, Zap, KeyRound } from 'lucide-react';
+import { WelcomeTour } from '@/components/learn/WelcomeTour';
 import { useAuth } from '@/auth/AuthProvider';
 import { useCatalog, useMyCertificates, useMyEnrollments, useMyBadges, useBadges } from '@/hooks/queries';
 import { supabase, must } from '@/lib/supabase';
@@ -68,6 +69,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-8">
+      {profile.role === 'student' && <WelcomeTour uid={profile.id} />}
       {privateProfile?.must_change_password && (
         <Link to="/app/settings#security" className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-100">
           <KeyRound className="h-5 w-5 shrink-0" />
@@ -124,6 +126,30 @@ export function Dashboard() {
             ))}
           </div>
         </Card>
+      </div>
+
+      {/* Big, obvious shortcuts — the two things younger learners most often look for */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link to="/app/practice" className="group flex items-center gap-4 rounded-2xl bg-gradient-to-r from-brand-500 to-brand-600 p-5 text-white shadow-sm transition hover:shadow-lift">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/20">
+            <Code2 className="h-6 w-6" />
+          </span>
+          <span className="flex-1">
+            <span className="block text-lg font-bold">Practice Lab</span>
+            <span className="block text-sm text-white/85">Write real code and complete challenges</span>
+          </span>
+          <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />
+        </Link>
+        <Link to="/app/questions" className="group flex items-center gap-4 rounded-2xl bg-gradient-to-r from-sky-500 to-sky-600 p-5 text-white shadow-sm transition hover:shadow-lift">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/20">
+            <MessageCircleQuestion className="h-6 w-6" />
+          </span>
+          <span className="flex-1">
+            <span className="block text-lg font-bold">Ask a teacher</span>
+            <span className="block text-sm text-white/85">Stuck? Get help on any lesson</span>
+          </span>
+          <ArrowRight className="h-5 w-5 transition group-hover:translate-x-1" />
+        </Link>
       </div>
 
       {/* Continue learning */}

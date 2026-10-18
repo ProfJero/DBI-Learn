@@ -14,6 +14,9 @@ import { useOnline } from '@/hooks/useOffline';
 import type { CoursePackage, Lesson, Module, ProgressResult } from '@/lib/types';
 import { uuid, youtubeId } from '@/lib/utils';
 import { CertificateCelebration, claimCelebration } from './Celebration';
+import { LessonQuestions } from '@/components/qa/QA';
+import { ReadAloud } from './ReadAloud';
+import { dataSaverOn } from '@/lib/a11y';
 
 export function LessonView({
   pkg,
@@ -91,6 +94,7 @@ export function LessonView({
             <CheckCircle2 className="h-3.5 w-3.5" /> Completed
           </Badge>
         )}
+        <ReadAloud text={`${lesson.title}.\n${lesson.content}`} className="ml-auto" />
       </div>
 
       {lesson.video_url && (
@@ -105,7 +109,7 @@ export function LessonView({
               loading="lazy"
             />
           ) : online ? (
-            <video className="aspect-video w-full" controls preload="metadata" src={lesson.video_url} />
+            <video className="aspect-video w-full" controls preload={dataSaverOn() ? 'none' : 'metadata'} src={lesson.video_url} />
           ) : (
             <div className="flex aspect-video flex-col items-center justify-center gap-2 text-ink-300">
               <WifiOff className="h-8 w-8" />
@@ -115,7 +119,7 @@ export function LessonView({
         </div>
       )}
 
-      <Markdown className="mt-8">{lesson.content}</Markdown>
+      <Markdown className="mt-8" tryIt>{lesson.content}</Markdown>
 
       {lesson.attachments?.length > 0 && (
         <Card className="mt-8 p-4">
@@ -133,6 +137,7 @@ export function LessonView({
       )}
 
       <Notes courseId={pkg.course.id} lessonId={lesson.id} />
+      {online && <LessonQuestions courseId={pkg.course.id} moduleId={module.id} lessonId={lesson.id} />}
 
       <div className="mt-10 flex flex-col-reverse gap-3 border-t border-ink-100 pt-6 dark:border-ink-800 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2">
@@ -145,7 +150,7 @@ export function LessonView({
             to={`/app/discussions?course=${pkg.course.id}&lesson=${lesson.id}`}
             className="inline-flex items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-ink-500 hover:text-brand-600"
           >
-            <MessagesSquare className="h-4 w-4" /> Ask a question
+            <MessagesSquare className="h-4 w-4" /> Discuss
           </Link>
         </div>
         {done ? (

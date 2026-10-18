@@ -56,7 +56,7 @@ export class MockSupabase {
     }));
     this.db.profiles_private = Object.values(USERS).map((u) => ({ id: u.id, email: u.email, phone: null, date_of_birth: null, gender: null, school: null, guardian_name: null, guardian_phone: null, must_change_password: false }));
     this.db.announcements = [{ id: uuid(), course_id: null, title: 'Welcome to the new DBI Learn! 🎉', body: 'Learn online or offline.', author_id: USERS.superAdmin.id, pinned: true, created_at: now() }];
-    for (const t of ['enrollments', 'lesson_progress', 'quiz_attempts', 'certificates', 'user_badges', 'xp_events', 'notifications', 'lesson_notes', 'course_reviews', 'discussion_threads', 'discussion_replies', 'support_tickets', 'ticket_messages', 'resources', 'instructor_applications', 'inquiries', 'audit_logs'])
+    for (const t of ['enrollments', 'lesson_progress', 'quiz_attempts', 'certificates', 'user_badges', 'xp_events', 'notifications', 'lesson_notes', 'course_reviews', 'discussion_threads', 'discussion_replies', 'support_tickets', 'ticket_messages', 'resources', 'instructor_applications', 'inquiries', 'audit_logs', 'course_questions', 'course_answers', 'question_votes', 'practice_completions'])
       this.db[t] = [];
   }
 
@@ -137,6 +137,22 @@ export class MockSupabase {
     if (table === 'courses') return rows.map((r) => course(r, select));
     if (table === 'enrollments' && select.includes('course:courses'))
       return rows.map((r) => ({ ...r, course: course(this.db.courses.find((c) => c.id === r.course_id)!, select) }));
+    const person = (id: string) => {
+      const pr = this.profile(id);
+      return pr ? { id: pr.id, full_name: pr.full_name, avatar_url: null, role: pr.role } : null;
+    };
+    if (table === 'course_questions')
+      return rows.map((r) => {
+        const c = this.db.courses.find((x) => x.id === r.course_id);
+        return {
+          ...r,
+          asker: person(r.asker_id),
+          course: c ? { title: c.title, slug: c.slug, instructor_id: c.instructor_id ?? null } : null,
+          module: r.module_id ? { title: this.db.modules.find((m) => m.id === r.module_id)?.title } : null,
+          lesson: r.lesson_id ? { title: this.db.lessons.find((l) => l.id === r.lesson_id)?.title } : null,
+        };
+      });
+    if (table === 'course_answers') return rows.map((r) => ({ ...r, author: person(r.author_id) }));
     if (table === 'announcements') return rows.map((r) => ({ ...r, course: null, author: { full_name: 'ProfJero', avatar_url: null } }));
     if (table === 'quizzes' && select.includes('questions(count)'))
       return rows.map((r) => ({ ...r, questions: [{ count: this.db.questions.filter((q) => q.quiz_id === r.id).length }] }));
@@ -248,6 +264,14 @@ export class MockSupabase {
         this.award(uid!, xp, 'quiz_submitted');
         return { ...attempt, xp_awarded: xp, pass_mark: quiz.pass_mark, course_progress: this.recompute(uid!, quiz.course_id) };
       }
+      case 'complete_practice': {
+        const uid = this.currentUser!;
+        if (this.db.practice_completions.some((c) => c.user_id === uid && c.challenge_id === a.p_challenge)) return { new: false, xp: 0 };
+        const xp = Math.min(Math.max(Number(a.p_xp) || 0, 0), 25);
+        this.db.practice_completions.push({ user_id: uid, challenge_id: a.p_challenge, language: a.p_language, xp, completed_at: now() });
+        this.award(uid, xp, 'practice');
+        return { new: true, xp, total: this.db.practice_completions.filter((c) => c.user_id === uid).length };
+      }
       case 'leaderboard':
         return this.db.profiles.filter((p) => p.role === 'student' && p.xp > 0).sort((x, y) => y.xp - x.xp).map((p, i) => ({ user_id: p.id, full_name: p.full_name, username: p.username, avatar_url: null, xp: p.xp, streak: p.streak, rank: i + 1 }));
       case 'verify_certificate':
@@ -341,7 +365,18 @@ export class MockSupabase {
           const keyCols = table === 'lesson_notes' ? ['user_id', 'lesson_id'] : table === 'course_reviews' ? ['user_id', 'course_id'] : ['id'];
           const existing = upsert ? rows.find((r) => keyCols.every((k) => r[k] === it[k])) : undefined;
           if (existing) return Object.assign(existing, it);
-          const row = { id: uuid(), created_at: now(), ...it };
+          const row: Row = { id: uuid(), created_at: now(), ...it };
+          if (table === 'course_questions') Object.assign(row, { status: 'open', featured: false, vote_count: 0, answer_count: 0, answered_at: null });
+          if (table === 'course_answers') {
+            const q = this.db.course_questions.find((x) => x.id === row.question_id)!;
+            row.from_staff = this.profile(this.currentUser!)?.role !== 'student';
+            q.answer_count += 1;
+            if (row.from_staff) {
+              q.status = 'answered';
+              q.answered_at ??= now();
+              this.notify(q.asker_id, 'Your question was answered', `/app/questions/${q.id}`);
+            } else if (q.status === 'answered') q.status = 'open';
+          }
           rows.push(row);
           return row;
         });

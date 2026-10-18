@@ -11,13 +11,17 @@ import { formatDate } from '@/lib/utils';
 export const CERT_W = 1123; // A4 landscape at 96dpi
 export const CERT_H = 794;
 
+// Every certificate uses the DBI palette: green #03C14B (growth) and blue #0B7BE8 (knowledge).
+// Kinds differ by which colour leads, not by introducing new colours.
 type Theme = { primary: string; deep: string; accent: string; title: string; subtitle: string };
 
+const GREEN = '#03c14b';
+const BLUE = '#0b7be8';
 const THEMES: Record<Certificate['kind'], Theme> = {
-  completion: { primary: '#03c14b', deep: '#0b3d24', accent: '#c9a227', title: 'Certificate', subtitle: 'of Completion' },
-  distinction: { primary: '#b8891d', deep: '#3a2a06', accent: '#d4a72c', title: 'Certificate', subtitle: 'of Completion with Distinction' },
-  participation: { primary: '#0b7be8', deep: '#0e2a4f', accent: '#c9a227', title: 'Certificate', subtitle: 'of Participation' },
-  achievement: { primary: '#7c3aed', deep: '#2a1157', accent: '#c9a227', title: 'Certificate', subtitle: 'of Achievement' },
+  completion: { primary: GREEN, deep: '#064e2b', accent: BLUE, title: 'Certificate', subtitle: 'of Completion' },
+  distinction: { primary: BLUE, deep: '#08305e', accent: GREEN, title: 'Certificate', subtitle: 'of Completion with Distinction' },
+  participation: { primary: BLUE, deep: '#0a3a6e', accent: GREEN, title: 'Certificate', subtitle: 'of Participation' },
+  achievement: { primary: GREEN, deep: '#08305e', accent: BLUE, title: 'Certificate', subtitle: 'of Achievement' },
 };
 
 /** Hypotrochoid path — the spirograph curves used in banknote guilloché security patterns. */
@@ -58,10 +62,10 @@ function Seal({ theme, year }: { theme: Theme; year: string }) {
     <svg width="140" height="170" viewBox="0 0 140 170" aria-hidden>
       <defs>
         <linearGradient id="foil" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#f6e7a8" />
-          <stop offset=".35" stopColor="#d4a72c" />
-          <stop offset=".6" stopColor="#f3dc9b" />
-          <stop offset="1" stopColor="#9c7414" />
+          <stop offset="0" stopColor="#9af5bd" />
+          <stop offset=".35" stopColor={GREEN} />
+          <stop offset=".65" stopColor="#5fb2ff" />
+          <stop offset="1" stopColor={BLUE} />
         </linearGradient>
         <linearGradient id="ribbon" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={theme.primary} />
@@ -70,19 +74,19 @@ function Seal({ theme, year }: { theme: Theme; year: string }) {
       </defs>
       <path d="M48 110 L36 166 L52 156 L60 170 L70 116 Z" fill="url(#ribbon)" />
       <path d="M92 110 L104 166 L88 156 L80 170 L70 116 Z" fill="url(#ribbon)" />
-      <polygon points={rays} fill="url(#foil)" stroke="#9c7414" strokeWidth=".6" />
-      <circle cx="70" cy="70" r="49" fill="none" stroke="#fff8dc" strokeWidth="1.2" opacity=".9" />
-      <circle cx="70" cy="70" r="45" fill="url(#foil)" stroke="#9c7414" strokeWidth=".8" />
-      <path d={inner} fill="none" stroke="#8a6512" strokeWidth=".35" opacity=".55" />
-      <circle cx="70" cy="70" r="27" fill={theme.deep} stroke="#f3dc9b" strokeWidth="1.5" />
-      <text x="70" y="69" textAnchor="middle" fontFamily="'Cormorant Garamond', serif" fontWeight="700" fontSize="18" fill="#f6e7a8" letterSpacing="1">
+      <polygon points={rays} fill="url(#foil)" stroke={theme.deep} strokeWidth=".6" />
+      <circle cx="70" cy="70" r="49" fill="none" stroke="#ffffff" strokeWidth="1.2" opacity=".9" />
+      <circle cx="70" cy="70" r="45" fill="url(#foil)" stroke={theme.deep} strokeWidth=".8" />
+      <path d={inner} fill="none" stroke="#ffffff" strokeWidth=".35" opacity=".6" />
+      <circle cx="70" cy="70" r="27" fill={theme.deep} stroke="#ffffff" strokeWidth="1.5" />
+      <text x="70" y="69" textAnchor="middle" fontFamily="'Cormorant Garamond', serif" fontWeight="700" fontSize="18" fill="#ffffff" letterSpacing="1">
         DBI
       </text>
-      <text x="70" y="84" textAnchor="middle" fontFamily="Inter Variable, sans-serif" fontWeight="700" fontSize="8" fill="#f6e7a8" letterSpacing="2">
+      <text x="70" y="84" textAnchor="middle" fontFamily="Inter Variable, sans-serif" fontWeight="700" fontSize="8" fill="#c9f7da" letterSpacing="2">
         {year}
       </text>
       <path id="sealArc" d="M 70 70 m -36 0 a 36 36 0 1 1 72 0" fill="none" />
-      <text fontFamily="Inter Variable, sans-serif" fontSize="6.4" fontWeight="700" fill="#5c430b" letterSpacing="1.6">
+      <text fontFamily="Inter Variable, sans-serif" fontSize="6.4" fontWeight="700" fill={theme.deep} letterSpacing="1.6">
         <textPath href="#sealArc" startOffset="50%" textAnchor="middle">
           VERIFIED · DIGITAL BRIDGE INITIATIVE
         </textPath>
@@ -120,24 +124,24 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
     <div
       ref={ref}
       style={{ width: CERT_W, height: CERT_H, fontFamily: "'Inter Variable', Inter, sans-serif" }}
-      className="relative overflow-hidden bg-[#fffdf6] text-[#1d2a22]"
+      className="relative overflow-hidden bg-[#fbfefc] text-[#12202b]"
     >
       {/* Paper + security patterns */}
       <svg className="absolute inset-0" width={CERT_W} height={CERT_H} aria-hidden>
         <defs>
           <radialGradient id="paper" cx="50%" cy="45%" r="75%">
-            <stop offset="0" stopColor="#fffef9" />
-            <stop offset="1" stopColor="#f6efd9" />
+            <stop offset="0" stopColor="#ffffff" />
+            <stop offset="1" stopColor="#eaf6f0" />
           </radialGradient>
           <linearGradient id="frame" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor={theme.deep} />
-            <stop offset=".5" stopColor={theme.primary} />
-            <stop offset="1" stopColor={theme.deep} />
+            <stop offset="0" stopColor={GREEN} />
+            <stop offset=".5" stopColor={theme.deep} />
+            <stop offset="1" stopColor={BLUE} />
           </linearGradient>
-          <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#9c7414" />
-            <stop offset=".5" stopColor="#f3dc9b" />
-            <stop offset="1" stopColor="#9c7414" />
+          <linearGradient id="trim" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor={BLUE} />
+            <stop offset=".5" stopColor={GREEN} />
+            <stop offset="1" stopColor={BLUE} />
           </linearGradient>
           <pattern id="micro" width="180" height="10" patternUnits="userSpaceOnUse">
             <text x="0" y="7" fontSize="5" fill={theme.primary} opacity=".22" fontFamily="Inter Variable, sans-serif" letterSpacing=".5">
@@ -153,13 +157,13 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
           <path d={patterns.rosetteL} fill="none" stroke={theme.primary} strokeWidth=".45" />
         </g>
         <g transform={`translate(${CERT_W - 70} ${CERT_H - 110})`} opacity=".12">
-          <path d={patterns.rosetteR} fill="none" stroke={theme.primary} strokeWidth=".45" />
+          <path d={patterns.rosetteR} fill="none" stroke={theme.accent} strokeWidth=".45" />
         </g>
         {/* Outer frame */}
         <rect x="14" y="14" width={CERT_W - 28} height={CERT_H - 28} fill="none" stroke="url(#frame)" strokeWidth="10" />
-        <rect x="26" y="26" width={CERT_W - 52} height={CERT_H - 52} fill="none" stroke="url(#gold)" strokeWidth="2" />
+        <rect x="26" y="26" width={CERT_W - 52} height={CERT_H - 52} fill="none" stroke="url(#trim)" strokeWidth="2" />
         <rect x="32" y="32" width={CERT_W - 64} height={CERT_H - 64} fill="url(#micro)" opacity=".9" />
-        <rect x="40" y="40" width={CERT_W - 80} height={CERT_H - 80} fill="#fffdf6" opacity=".93" />
+        <rect x="40" y="40" width={CERT_W - 80} height={CERT_H - 80} fill="#fbfefc" opacity=".93" />
         <rect x="40" y="40" width={CERT_W - 80} height={CERT_H - 80} fill="none" stroke={theme.primary} strokeWidth=".8" opacity=".6" />
         {patterns.bandsTop.map((d, i) => (
           <path key={`t${i}`} d={d} fill="none" stroke={i % 2 ? theme.accent : theme.primary} strokeWidth=".5" opacity=".55" />
@@ -175,9 +179,9 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
           [40, CERT_H - 40, 270],
         ].map(([x, y, rot]) => (
           <g key={`${x}-${y}`} transform={`translate(${x} ${y}) rotate(${rot})`}>
-            <path d="M0 0 L46 0 M0 0 L0 46" stroke="url(#gold)" strokeWidth="3" />
+            <path d="M0 0 L46 0 M0 0 L0 46" stroke="url(#trim)" strokeWidth="3" />
             <path d="M8 8 L30 8 M8 8 L8 30" stroke={theme.primary} strokeWidth="1.2" />
-            <circle cx="8" cy="8" r="3.2" fill="url(#gold)" />
+            <circle cx="8" cy="8" r="3.2" fill="url(#trim)" />
             <path d="M14 14 q 14 2 18 18 q -16 -4 -18 -18 z" fill={theme.primary} opacity=".55" />
           </g>
         ))}
@@ -214,19 +218,19 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
           <span className="h-px w-16" style={{ background: `linear-gradient(90deg, ${theme.accent}, transparent)` }} />
         </div>
 
-        <div className="mt-6 text-[13px] font-medium uppercase tracking-[0.3em] text-[#6b6450]">This certificate is proudly presented to</div>
-        <div className="mt-1 font-script leading-[1.15]" style={{ fontSize: nameSize, color: '#1d2a22' }}>
+        <div className="mt-6 text-[13px] font-medium uppercase tracking-[0.3em] text-[#4b5b66]">This certificate is proudly presented to</div>
+        <div className="mt-1 font-script leading-[1.15]" style={{ fontSize: nameSize, color: '#12202b' }}>
           {cert.recipient_name}
         </div>
         <div className="h-[2px] w-[460px]" style={{ background: `linear-gradient(90deg, transparent, ${theme.accent}, transparent)` }} />
 
-        <p className="mt-4 max-w-[760px] font-serif text-[19px] leading-snug text-[#3b3a33]">
+        <p className="mt-4 max-w-[760px] font-serif text-[19px] leading-snug text-[#2b3a44]">
           {cert.kind === 'participation' ? 'for active participation in' : cert.kind === 'achievement' ? 'in recognition of outstanding achievement in' : 'for successfully completing all lessons and assessments of'}
         </p>
         <div className="mt-1 max-w-[820px] font-serif font-bold leading-tight" style={{ fontSize: titleSize, color: theme.deep }}>
           {cert.course_title}
         </div>
-        <div className="mt-3 flex items-center gap-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#6b6450]">
+        <div className="mt-3 flex items-center gap-3 text-[12px] font-semibold uppercase tracking-[0.18em] text-[#4b5b66]">
           {cert.category_name && <span>{cert.category_name}</span>}
           {cert.hours != null && (
             <>
@@ -254,11 +258,11 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
                 {s.signature_url ? (
                   <img src={s.signature_url} alt="" crossOrigin="anonymous" className="max-h-[60px] max-w-[170px] object-contain" style={{ mixBlendMode: 'multiply' }} />
                 ) : (
-                  <span className="font-script text-[34px] text-[#1d2a22]">{s.name}</span>
+                  <span className="font-script text-[34px] text-[#12202b]">{s.name}</span>
                 )}
               </div>
-              <div className="mt-1 h-px w-full bg-[#1d2a22]/60" />
-              <div className="mt-1.5 text-[13px] font-bold text-[#1d2a22]">{s.name}</div>
+              <div className="mt-1 h-px w-full bg-[#12202b]/60" />
+              <div className="mt-1.5 text-[13px] font-bold text-[#12202b]">{s.name}</div>
               <div className="text-[10.5px] font-medium uppercase tracking-[0.14em]" style={{ color: theme.primary }}>
                 {s.title}
               </div>
@@ -270,11 +274,11 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
         </div>
         <div className="flex items-end justify-end gap-3 text-right">
           <div className="pb-1">
-            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6b6450]">Certificate ID</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#4b5b66]">Certificate ID</div>
             <div className="font-mono text-[14px] font-bold tracking-wider" style={{ color: theme.deep }}>
               {cert.serial}
             </div>
-            <div className="mt-1 max-w-[190px] text-[9.5px] leading-snug text-[#6b6450]">
+            <div className="mt-1 max-w-[190px] text-[9.5px] leading-snug text-[#4b5b66]">
               Scan or visit {SITE_URL.replace(/^https?:\/\//, '')}/verify to confirm authenticity
             </div>
           </div>
@@ -284,7 +288,7 @@ export const CertificateArt = forwardRef<HTMLDivElement, { cert: Certificate }>(
         </div>
       </div>
 
-      <div className="absolute inset-x-0 bottom-[50px] z-10 text-center text-[8.5px] font-medium tracking-[0.18em] text-[#8a8370]">
+      <div className="absolute inset-x-0 bottom-[50px] z-10 text-center text-[8.5px] font-medium tracking-[0.18em] text-[#6b7a85]">
         BUILT BY {BRAND.builtBy.toUpperCase()} · POWERED BY {BRAND.org.toUpperCase()}
       </div>
     </div>

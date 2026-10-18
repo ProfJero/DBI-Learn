@@ -38,7 +38,7 @@ export function Certificates() {
                     Issued {formatDate(c.issued_at)} · <span className="font-mono">{c.serial}</span>
                   </p>
                 </div>
-                <Badge tone={c.status === 'revoked' ? 'red' : c.kind === 'distinction' ? 'gold' : 'green'} className="capitalize">
+                <Badge tone={c.status === 'revoked' ? 'red' : c.kind === 'distinction' ? 'blue' : 'green'} className="capitalize">
                   {c.status === 'revoked' ? 'Revoked' : c.kind}
                 </Badge>
               </div>

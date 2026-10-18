@@ -3,6 +3,7 @@ import { BookOpen, Clock, Star, Users, Code2, BarChart3, Palette, ShieldCheck, C
 import type { Course } from '@/lib/types';
 import { Badge, Progress } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { img } from '@/lib/media';
 
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   'software-development': Code2,
@@ -24,7 +25,7 @@ export function CourseCover({ course, className, size = 'md' }: { course: Pick<C
   const color = course.accent || course.category?.color || '#03c14b';
   const Icon = categoryIcon(course.category?.slug);
   if (course.cover_url)
-    return <img src={course.cover_url} alt="" loading="lazy" className={cn('aspect-[16/9] w-full object-cover', className)} />;
+    return <img src={img(course.cover_url, 640)} alt="" loading="lazy" className={cn('aspect-[16/9] w-full object-cover', className)} />;
   return (
     <div
       className={cn('relative aspect-[16/9] w-full overflow-hidden', className)}

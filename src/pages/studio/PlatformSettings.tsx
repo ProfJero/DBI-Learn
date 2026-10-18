@@ -8,13 +8,8 @@ import { useCategories, useSettings } from '@/hooks/queries';
 import type { Category, Signatory } from '@/lib/types';
 import { Button, Card, EmptyState, Field, FullPageSpinner, Input, PageHeader, Textarea } from '@/components/ui';
 import { formatDate, slugify } from '@/lib/utils';
+import { uploadImage } from '@/lib/media';
 
-async function uploadSignature(file: File) {
-  const path = `signatures/${Date.now()}-${slugify(file.name)}.${file.name.split('.').pop()}`;
-  const { error } = await supabase.storage.from('course-media').upload(path, file, { contentType: file.type });
-  if (error) throw error;
-  return supabase.storage.from('course-media').getPublicUrl(path).data.publicUrl;
-}
 
 function SignatoryEditor({ value, onChange, onRemove }: { value: Signatory; onChange: (s: Signatory) => void; onRemove?: () => void }) {
   const [busy, setBusy] = useState(false);
@@ -38,7 +33,7 @@ function SignatoryEditor({ value, onChange, onRemove }: { value: Signatory; onCh
             if (!f) return;
             setBusy(true);
             try {
-              onChange({ ...value, signature_url: await uploadSignature(f) });
+              onChange({ ...value, signature_url: await uploadImage(f, 'signature') });
             } catch (err) {
               toast.error((err as Error).message);
             } finally {

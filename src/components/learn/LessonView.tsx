@@ -14,6 +14,7 @@ import { useOnline } from '@/hooks/useOffline';
 import type { CoursePackage, Lesson, Module, ProgressResult } from '@/lib/types';
 import { uuid, youtubeId } from '@/lib/utils';
 import { CertificateCelebration, claimCelebration } from './Celebration';
+import { LessonQuestions } from '@/components/qa/QA';
 
 export function LessonView({
   pkg,
@@ -115,7 +116,7 @@ export function LessonView({
         </div>
       )}
 
-      <Markdown className="mt-8">{lesson.content}</Markdown>
+      <Markdown className="mt-8" tryIt>{lesson.content}</Markdown>
 
       {lesson.attachments?.length > 0 && (
         <Card className="mt-8 p-4">
@@ -133,6 +134,7 @@ export function LessonView({
       )}
 
       <Notes courseId={pkg.course.id} lessonId={lesson.id} />
+      {online && <LessonQuestions courseId={pkg.course.id} moduleId={module.id} lessonId={lesson.id} />}
 
       <div className="mt-10 flex flex-col-reverse gap-3 border-t border-ink-100 pt-6 dark:border-ink-800 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2">
@@ -145,7 +147,7 @@ export function LessonView({
             to={`/app/discussions?course=${pkg.course.id}&lesson=${lesson.id}`}
             className="inline-flex items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-ink-500 hover:text-brand-600"
           >
-            <MessagesSquare className="h-4 w-4" /> Ask a question
+            <MessagesSquare className="h-4 w-4" /> Discuss
           </Link>
         </div>
         {done ? (

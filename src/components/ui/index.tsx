@@ -12,6 +12,7 @@ import {
 import { Link, type LinkProps } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { cn, initials } from '@/lib/utils';
+import { img } from '@/lib/media';
 import { Spinner } from './Spinner';
 
 export { Spinner, FullPageSpinner } from './Spinner';
@@ -226,7 +227,7 @@ export function ProgressRing({ value, size = 56, stroke = 6, children }: { value
 export function Avatar({ name, url, size = 40, className }: { name: string; url?: string | null; size?: number; className?: string }) {
   const hue = [...name].reduce((h, c) => h + c.charCodeAt(0), 0) % 360;
   return url ? (
-    <img src={url} alt={name} width={size} height={size} className={cn('shrink-0 rounded-full object-cover', className)} style={{ width: size, height: size }} />
+    <img src={img(url, size)} alt={name} width={size} height={size} className={cn('shrink-0 rounded-full object-cover', className)} style={{ width: size, height: size }} />
   ) : (
     <span
       aria-label={name}

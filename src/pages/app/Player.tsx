@@ -20,7 +20,9 @@ export function Player() {
   const steps = useSteps(pkg);
   const [drawer, setDrawer] = useState(false);
   const location = useLocation();
-  useEffect(() => setDrawer(false), [location.pathname]);
+  useEffect(() => {
+    setDrawer(false);
+  }, [location.pathname]);
 
   // Record the resume point (best effort, online only).
   const currentLessonId = location.pathname.match(/lesson\/([^/]+)/)?.[1];

@@ -80,6 +80,7 @@ test.describe('Code Lab', () => {
     await setCode(page, 'function add(a, b) {\n  return a + b;\n}\nconsole.log(add(2, 3));');
     await page.getByRole('button', { name: 'Run & check' }).click();
     await expect(page.getByText('Well done! Challenge complete.')).toBeVisible();
+    await expect(page.getByText(/Challenge passed! \+10 XP/)).toBeVisible();
 
     // Endless loops are stopped instead of freezing the page.
     await page.goto('/app/practice/code?lang=javascript');
@@ -159,6 +160,62 @@ test.describe('Ask a teacher', () => {
     await expect(page.getByText('RAM is short-term memory')).toBeVisible();
     await page.screenshot({ path: `${shots}/35-question-answered.png` });
     expect(mock.db.notifications.some((n) => n.user_id === USERS.student.id && n.title === 'Your question was answered')).toBe(true);
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe('JHS/SHS friendly', () => {
+  test('first-visit tour, accessibility settings and read-aloud', async ({ page }) => {
+    const errors = watchErrors(page);
+    const mock = new MockSupabase();
+    await mock.install(page, { tour: true });
+    await login(page, 'student');
+    const tour = page.getByRole('dialog');
+    await expect(tour.getByText('Akwaaba to DBI Learn!')).toBeVisible();
+    await page.screenshot({ path: `${shots}/36-welcome-tour.png` });
+    for (let i = 0; i < 5; i++) await tour.getByRole('button', { name: 'Next' }).click();
+    await tour.getByRole('button', { name: 'Find a course' }).click();
+    await expect(page).toHaveURL(/\/app\/catalog/);
+    await page.goto('/app');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    await page.goto('/app/settings');
+    await page.getByRole('radio', { name: /Extra large/ }).click();
+    await page.getByRole('switch', { name: 'Easy-read font' }).click();
+    await page.getByRole('switch', { name: 'Data saver' }).click();
+    expect(await page.evaluate(() => document.documentElement.style.fontSize)).toBe('125%');
+    await expect(page.locator('html')).toHaveClass(/easy-font/);
+    await page.screenshot({ path: `${shots}/37-accessibility.png`, fullPage: true });
+    await page.reload();
+    expect(await page.evaluate(() => document.documentElement.style.fontSize)).toBe('125%');
+
+    await page.goto(`/app/catalog/${COURSE.course.slug}`);
+    await page.getByRole('button', { name: 'Enroll for free' }).click();
+    await expect(page.getByRole('button', { name: 'Listen' })).toBeVisible();
+    await page.screenshot({ path: `${shots}/38-lesson-large-text.png` });
+    expect(errors).toEqual([]);
+  });
+});
+
+test.describe('on a phone', () => {
+  test.use({ viewport: { width: 390, height: 780 }, isMobile: true, hasTouch: true });
+  test('Code Lab switches between task, code and output and has a symbol bar', async ({ page }) => {
+    const errors = watchErrors(page);
+    const mock = new MockSupabase();
+    await mock.install(page);
+    await login(page, 'student');
+    await page.goto('/app/practice/challenge/web-list');
+    await expect(page.getByRole('heading', { name: 'Favourite foods list' })).toBeVisible();
+    await page.screenshot({ path: `${shots}/40-phone-task.png` });
+    await page.getByRole('tab', { name: 'Code' }).click();
+    await page.locator('.cm-content').first().click();
+    await page.keyboard.press('ControlOrMeta+End');
+    await page.getByRole('button', { name: '<', exact: true }).click();
+    await expect(page.locator('.cm-content').first()).toContainText('<>');
+    await page.screenshot({ path: `${shots}/41-phone-code.png` });
+    await page.getByRole('button', { name: 'Run & check' }).click();
+    await expect(page.getByRole('tab', { name: /Preview/ })).toHaveAttribute('aria-selected', 'true');
+    await page.screenshot({ path: `${shots}/42-phone-output.png` });
     expect(errors).toEqual([]);
   });
 });

@@ -3,12 +3,11 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, ChevronRight, FolderOpen, Trophy, WifiOff } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
-import { supabase } from '@/lib/supabase';
 import { Card, PageHeader, Progress } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import { LANGUAGES, languageById, type LangId } from '@/features/codelab/languages';
 import { CHALLENGES } from '@/features/codelab/challenges';
-import { getCompleted, listProjects } from '@/features/codelab/projects';
+import { listProjects, syncPracticeXp } from '@/features/codelab/projects';
 
 export function Practice() {
   const { session } = useAuth();
@@ -18,14 +17,7 @@ export function Practice() {
   const { data: done } = useQuery({
     queryKey: ['codelab-done', uid],
     networkMode: 'always',
-    queryFn: async () => {
-      const local = await getCompleted(uid);
-      if (navigator.onLine) {
-        const { data } = await supabase.from('practice_completions').select('challenge_id').eq('user_id', uid);
-        data?.forEach((r) => local.add(r.challenge_id as string));
-      }
-      return local;
-    },
+    queryFn: () => syncPracticeXp(uid),
   });
   const { data: projects } = useQuery({ queryKey: ['codelab-projects', uid], networkMode: 'always', queryFn: () => listProjects(uid) });
 

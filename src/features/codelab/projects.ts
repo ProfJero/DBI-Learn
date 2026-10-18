@@ -1,4 +1,6 @@
 import { idb } from '@/lib/offline/store';
+import { supabase } from '@/lib/supabase';
+import { CHALLENGES } from './challenges';
 import type { LangId } from './languages';
 
 /** Learner projects live on the device (IndexedDB) so the Code Lab works fully offline. */
@@ -31,20 +33,23 @@ export async function markCompleted(uid: string, id: string) {
   await idb.update<string[]>(doneKey(uid), (old) => Array.from(new Set([...(old ?? []), id])));
 }
 
-/** Hand-off from a lesson's "Try it" button to the Code Lab. */
-export function tryItLink(lang: string, code: string) {
-  const map: Record<string, { lang: LangId; file: string }> = {
-    html: { lang: 'web', file: 'index.html' },
-    css: { lang: 'web', file: 'style.css' },
-    js: { lang: 'javascript', file: 'main.js' },
-    javascript: { lang: 'javascript', file: 'main.js' },
-    ts: { lang: 'typescript', file: 'main.ts' },
-    typescript: { lang: 'typescript', file: 'main.ts' },
-    py: { lang: 'python', file: 'main.py' },
-    python: { lang: 'python', file: 'main.py' },
-    sql: { lang: 'sql', file: 'query.sql' },
-  };
-  const m = map[lang.toLowerCase()];
-  if (!m) return null;
-  return { to: `/app/practice/code?lang=${m.lang}&tryit=1`, state: { tryit: { file: m.file, code } } };
+/**
+ * Sends XP for challenges passed on this device that the server has not recorded yet —
+ * passed offline, or the learner left the page before the request finished. Returns every completed id.
+ */
+export async function syncPracticeXp(uid: string) {
+  const local = await getCompleted(uid);
+  if (!navigator.onLine) return local;
+  const { data, error } = await supabase.from('practice_completions').select('challenge_id').eq('user_id', uid);
+  if (error) return local;
+  const server = new Set((data ?? []).map((r) => r.challenge_id as string));
+  for (const id of local) {
+    const c = CHALLENGES.find((x) => x.id === id);
+    if (c && !server.has(id)) {
+      const { error: e } = await supabase.rpc('complete_practice', { p_challenge: c.id, p_language: c.lang, p_xp: c.xp });
+      if (!e) server.add(id);
+    }
+  }
+  server.forEach((id) => local.add(id));
+  return local;
 }

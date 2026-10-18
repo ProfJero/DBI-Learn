@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { slugify } from './utils';
+import { dataSaverOn } from './a11y';
 
 export type UploadKind = 'avatar' | 'cover' | 'lesson' | 'signature' | 'resource';
 
@@ -58,6 +59,7 @@ export function img(url: string | null | undefined, width?: number): string | un
   if (!url) return undefined;
   const m = url.match(/^(https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/)(.*)$/);
   if (!m) return url;
-  const t = ['f_auto', 'q_auto', width ? `c_limit,w_${Math.round(width * Math.min(2, globalThis.devicePixelRatio || 1))}` : null].filter(Boolean).join(',');
+  const saver = dataSaverOn();
+  const t = ['f_auto', saver ? 'q_auto:eco' : 'q_auto', width ? `c_limit,w_${Math.round(width * (saver ? 1 : Math.min(2, globalThis.devicePixelRatio || 1)))}` : null].filter(Boolean).join(',');
   return `${m[1]}${t}/${m[2]}`;
 }

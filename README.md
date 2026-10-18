@@ -10,7 +10,10 @@ DBI Learn delivers free, practical digital-skills courses that work online *and 
 
 - **9 production-ready courses** — Digital Literacy, Excel & Data Analysis, HTML & CSS, Python, Graphic Design with Canva, Cybersecurity, Digital Marketing, Networking & Cloud, and AI for Everyone — 105 lessons, 53 quizzes and 310 questions with explanations.
 - **Installable PWA with offline learning** — learners download whole courses to the device; lesson completions, quiz submissions and notes queue locally and sync automatically when the connection returns. Practice quizzes are graded on the device; graded quizzes are marked by the server on sync.
-- **Verifiable certificates** — issued automatically on completion (distinction at ≥85%), with a guilloché security border, foil seal, real signatures, QR code and a public verification page. Download as PDF or PNG, add to LinkedIn. Admins can also issue certificates manually or in bulk from CSV, and revoke them.
+- **Practice Lab (Code Lab)** — a phone-friendly code editor (CodeMirror 6) with Emmet, suggestions, snippets, plain-English error hints, Prettier formatting and a VS Code-style extensions panel. HTML/CSS/JS preview live; JavaScript, TypeScript and Python (Pyodide) run in a worker with a time limit; SQL runs on a bundled SQLite school database. 15 graded challenges award XP once each, projects save on the device, and lesson code blocks have a **Try it** button.
+- **Ask a teacher** — learners ask about a course, module or lesson, publicly (classmates can say "I have this question too") or privately. The course instructor or admins answer from the studio inbox and the learner is notified.
+- **Built for JHS/SHS learners** — a first-visit tour, read-aloud lessons (device voices, works offline), text size, an easy-read font, reduced motion and a data-saver mode.
+- **Verifiable certificates** — in DBI green and blue, issued automatically on completion (distinction at ≥85%), with a guilloché security border, seal, real signatures, QR code and a public verification page. Download as PDF or PNG, add to LinkedIn. Admins can also issue certificates manually or in bulk from CSV, and revoke them.
 - **Engagement** — XP, levels, daily goals, streaks, 10 badges, weekly leaderboard, course reviews, discussions with accepted answers, announcements, notifications.
 - **Studio for staff** — course, lesson and quiz authoring (Markdown with live preview, code highlighting and callouts), a review-and-publish workflow, learner progress, reports (lesson funnel, quiz pass rates, most-missed questions, CSV exports), support inbox, contact messages, platform settings and an audit log.
 - **Roles** — `super_admin` (adds admins and instructors), `admin`, `instructor`, `student`. Every rule is enforced in Postgres with row-level security, column grants and `SECURITY DEFINER` functions — never only in the browser. Quiz answer keys are never readable by students.
@@ -66,9 +69,10 @@ Configuration lives in `src/lib/config.ts`. The Supabase URL and **publishable**
 ### Supabase
 
 1. Apply `supabase/migrations/*.sql` in order (SQL editor or `supabase db push`).
-2. Deploy the functions: `supabase functions deploy staff-admin --no-verify-jwt` and `supabase functions deploy auth-login --no-verify-jwt` (both verify callers themselves).
+2. Deploy the functions: `supabase functions deploy staff-admin --no-verify-jwt`, `supabase functions deploy auth-login --no-verify-jwt` (both verify callers themselves) and `supabase functions deploy media-sign`.
 3. In **Authentication → URL Configuration**, set the **Site URL** to your live domain and add `https://<domain>/reset-password` and `https://<domain>/app` to **Redirect URLs**.
-4. For reliable sign-up and password-reset emails, configure a custom SMTP provider in **Authentication → Emails** (the built-in sender is heavily rate-limited).
+4. **Cloudinary images (optional).** In the Cloudinary console copy your *Cloud name*, *API key* and *API secret*, then add them as Edge Function secrets (**Edge Functions → Secrets**): `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. Uploads (avatars, course covers, lesson images, signatures) then go to Cloudinary and are served resized in WebP/AVIF. Without the secrets, uploads use Supabase Storage.
+5. For reliable sign-up and password-reset emails, configure a custom SMTP provider in **Authentication → Emails** (the built-in sender is heavily rate-limited).
 
 ## Editing course content
 

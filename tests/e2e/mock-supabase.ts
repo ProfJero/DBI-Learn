@@ -60,7 +60,16 @@ export class MockSupabase {
       this.db[t] = [];
   }
 
-  async install(page: Page) {
+  /** Pass `{ tour: true }` to see the first-visit welcome tour; other tests skip it. */
+  async install(page: Page, opts: { tour?: boolean } = {}) {
+    if (!opts.tour)
+      await page.addInitScript((ids) => {
+        try {
+          ids.forEach((id) => localStorage.setItem(`dbi:tour:${id}`, 'seen'));
+        } catch {
+          /* sandboxed preview frames have no storage */
+        }
+      }, Object.values(USERS).map((u) => u.id));
     await page.route(/\.supabase\.co\//, (route) => this.handle(route));
   }
 

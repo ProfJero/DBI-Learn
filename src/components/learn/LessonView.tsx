@@ -15,6 +15,8 @@ import type { CoursePackage, Lesson, Module, ProgressResult } from '@/lib/types'
 import { uuid, youtubeId } from '@/lib/utils';
 import { CertificateCelebration, claimCelebration } from './Celebration';
 import { LessonQuestions } from '@/components/qa/QA';
+import { ReadAloud } from './ReadAloud';
+import { dataSaverOn } from '@/lib/a11y';
 
 export function LessonView({
   pkg,
@@ -92,6 +94,7 @@ export function LessonView({
             <CheckCircle2 className="h-3.5 w-3.5" /> Completed
           </Badge>
         )}
+        <ReadAloud text={`${lesson.title}.\n${lesson.content}`} className="ml-auto" />
       </div>
 
       {lesson.video_url && (
@@ -106,7 +109,7 @@ export function LessonView({
               loading="lazy"
             />
           ) : online ? (
-            <video className="aspect-video w-full" controls preload="metadata" src={lesson.video_url} />
+            <video className="aspect-video w-full" controls preload={dataSaverOn() ? 'none' : 'metadata'} src={lesson.video_url} />
           ) : (
             <div className="flex aspect-video flex-col items-center justify-center gap-2 text-ink-300">
               <WifiOff className="h-8 w-8" />

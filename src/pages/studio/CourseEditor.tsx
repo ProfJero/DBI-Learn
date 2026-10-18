@@ -459,7 +459,9 @@ function IconBtn({ children, label, onClick, disabled }: { children: React.React
 
 function ModuleModal({ value, courseId, onClose, onSaved }: { value: Partial<Module> | null; courseId: string; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState({ title: '', summary: '' });
-  useEffect(() => setF({ title: value?.title ?? '', summary: value?.summary ?? '' }), [value]);
+  useEffect(() => {
+    setF({ title: value?.title ?? '', summary: value?.summary ?? '' });
+  }, [value]);
   const save = useMutation({
     mutationFn: async () => {
       const row = { title: f.title.trim(), summary: f.summary.trim() || null };

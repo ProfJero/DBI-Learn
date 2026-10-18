@@ -73,7 +73,9 @@ export function PlatformSettings() {
       setSigs(((settings.certificate?.signatories ?? []) as Signatory[]).map((s) => ({ ...s })));
     }
   }, [settings]);
-  useEffect(() => setCats(categories?.map((c) => ({ ...c })) ?? []), [categories]);
+  useEffect(() => {
+    setCats(categories?.map((c) => ({ ...c })) ?? []);
+  }, [categories]);
 
   const saveSettings = useMutation({
     mutationFn: async () => {

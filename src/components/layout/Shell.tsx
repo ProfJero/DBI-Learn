@@ -28,7 +28,9 @@ export interface NavGroup {
 export function Shell({ groups, mode }: { groups: NavGroup[]; mode: 'student' | 'studio' }) {
   const [drawer, setDrawer] = useState(false);
   const location = useLocation();
-  useEffect(() => setDrawer(false), [location.pathname]);
+  useEffect(() => {
+    setDrawer(false);
+  }, [location.pathname]);
   const mobileTabs = groups.flatMap((g) => g.items).filter((i) => i.mobile);
 
   const sidebar = (
